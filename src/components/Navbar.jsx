@@ -127,7 +127,7 @@ const Navbar = ({
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
+                className="absolute right-0 mt-2 bg-gray-800 rounded-lg shadow-lg border border-gray-700"
               >
                 <div className="p-2">
                   <div className="px-3 py-2 border-b border-gray-700">
