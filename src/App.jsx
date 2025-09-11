@@ -111,6 +111,8 @@ function App() {
               <Sidebar
                 isCollapsed={sidebarCollapsed}
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                properties={data.properties}
+                transactions={data.transactions}
               />
 
               <main className="flex-1 overflow-auto p-6">
