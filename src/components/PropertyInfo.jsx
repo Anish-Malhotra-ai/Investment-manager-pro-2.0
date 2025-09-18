@@ -184,7 +184,7 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
   return (
     <div className="space-y-6">
       {/* Property Information Card */}
-      <div className="card">
+      <div className="card p-6">
         <div className="card-header flex justify-between items-center">
           <h3 className="text-lg font-semibold text-white flex items-center">
             <SafeIcon icon={FiHome} className="w-5 h-5 mr-2" />

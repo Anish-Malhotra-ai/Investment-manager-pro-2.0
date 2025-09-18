@@ -59,7 +59,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 border-b rounded-t-xl border-gray-700 p-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -85,7 +85,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
       </div>
 
       {/* Tabs */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 border-b rounded-b-xl border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8">
             {tabs.map((tab) => (

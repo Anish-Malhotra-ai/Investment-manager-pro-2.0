@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
+import { createAgent, updateAgent, deleteAgent } from '../utils/DataUtils';
 
-const { FiPlus, FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin } = FiIcons;
+const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin } = FiIcons;
 
 const AgentManager = ({ property, properties, onSaveData, loans, transactions, settings }) => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -71,42 +72,40 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
       return;
     }
 
-    const agentData = {
-      ...formData,
-      id: editingAgent?.id || Date.now().toString(),
-      createdAt: editingAgent?.createdAt || new Date().toISOString()
-    };
+    try {
+      const agentData = {
+        ...formData,
+        propertyId: property.id
+      };
 
-    const agents = property.agents || [];
-    let updatedAgents;
+      let result;
+      if (editingAgent) {
+        // Update existing agent in PocketBase
+        result = await updateAgent(editingAgent.id, agentData);
+        if (!result.success) {
+          console.error('Failed to update agent:', result.error);
+          return;
+        }
+      } else {
+        // Create new agent in PocketBase
+        result = await createAgent(agentData);
+        if (!result.success) {
+          console.error('Failed to create agent:', result.error);
+          return;
+        }
+      }
 
-    if (editingAgent) {
-      updatedAgents = agents.map(agent => 
-        agent.id === editingAgent.id ? agentData : agent
-      );
-    } else {
-      updatedAgents = [...agents, agentData];
+      // Trigger data refresh
+      if (onSaveData) {
+        onSaveData();
+      }
+      
+      setShowAddForm(false);
+      setEditingAgent(null);
+      resetForm();
+    } catch (error) {
+      console.error('Error saving agent:', error);
     }
-
-    const updatedProperty = {
-      ...property,
-      agents: updatedAgents
-    };
-
-    const updatedProperties = properties.map(p => 
-      p.id === property.id ? updatedProperty : p
-    );
-
-    await onSaveData({ 
-      properties: updatedProperties, 
-      loans, 
-      transactions,
-      settings
-    });
-    
-    setShowAddForm(false);
-    setEditingAgent(null);
-    resetForm();
   };
 
   const handleEdit = (agent) => {
@@ -120,24 +119,21 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
       return;
     }
 
-    const agents = property.agents || [];
-    const updatedAgents = agents.filter(agent => agent.id !== agentId);
+    try {
+      // Delete agent from PocketBase
+      const result = await deleteAgent(agentId);
+      if (!result.success) {
+        console.error('Failed to delete agent:', result.error);
+        return;
+      }
 
-    const updatedProperty = {
-      ...property,
-      agents: updatedAgents
-    };
-
-    const updatedProperties = properties.map(p => 
-      p.id === property.id ? updatedProperty : p
-    );
-
-    await onSaveData({ 
-      properties: updatedProperties, 
-      loans, 
-      transactions,
-      settings
-    });
+      // Trigger data refresh
+      if (onSaveData) {
+        onSaveData();
+      }
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+    }
   };
 
   const handleCancel = () => {

@@ -1,9 +1,8 @@
-import React from 'react';
-import PocketbaseManager from '../services/PocketbaseManager';
+import SupabaseManager from '../services/SupabaseManager';
 import Login from './Login';
 
 const ProtectedRoute = ({ children, user, onLogin }) => {
-  if (!PocketbaseManager.isAuthenticated() || !user) {
+  if (!SupabaseManager.isAuthenticated() || !user) {
     return <Login onLogin={onLogin} />;
   }
 

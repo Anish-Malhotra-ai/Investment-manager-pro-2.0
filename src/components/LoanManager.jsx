@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { formatCurrency } from '../utils/number';
+import { createLoan, updateLoan, deleteLoan } from '../utils/DataUtils';
 
 const { FiPlus, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiCreditCard } = FiIcons;
 
@@ -13,8 +14,6 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
   // Safe defaults for all props
   const safeLoans = Array.isArray(loans) ? loans : [];
   const safeProperties = Array.isArray(properties) ? properties : [];
-  const safeTransactions = Array.isArray(transactions) ? transactions : [];
-  const safeSettings = settings && typeof settings === 'object' ? settings : {};
 
   // Filter loans based on propertyId
   const propertyLoans = useMemo(
@@ -117,36 +116,47 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     try {
       const loanData = {
         ...formData,
-        id: editingLoan?.id || `loan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         originalAmount: parseFloat(formData.originalAmount),
         currentBalance: formData.currentBalance ? parseFloat(formData.currentBalance) : parseFloat(formData.originalAmount),
         interestRate: parseFloat(formData.interestRate),
         loanTerm: parseInt(formData.loanTerm),
-        monthlyPayment: formData.monthlyPayment ? parseFloat(formData.monthlyPayment) : 0,
-        createdAt: editingLoan?.createdAt || new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0]
+        monthlyPayment: formData.monthlyPayment ? parseFloat(formData.monthlyPayment) : 0
       };
 
-      const updatedLoans = editingLoan
-        ? safeLoans.map(loan => loan.id === editingLoan.id ? loanData : loan)
-        : [...safeLoans, loanData];
+      let result;
+      if (editingLoan) {
+        // Update existing loan in PocketBase
+        result = await updateLoan(editingLoan.id, loanData);
+        if (!result.success) {
+          console.error('Failed to update loan:', result.error);
+          if (addNotification) {
+            addNotification('Failed to update loan - please try again', 'error');
+          }
+          return;
+        }
+      } else {
+        // Create new loan in PocketBase
+        result = await createLoan(loanData);
+        if (!result.success) {
+          console.error('Failed to create loan:', result.error);
+          if (addNotification) {
+            addNotification('Failed to create loan - please try again', 'error');
+          }
+          return;
+        }
+      }
 
-      // Create updated data object with all required fields
-      const updatedData = {
-        properties: safeProperties,
-        loans: updatedLoans,
-        transactions: safeTransactions,
-        settings: safeSettings
-      };
-
-      onSaveData(updatedData);
+      // Trigger data refresh
+      if (onSaveData) {
+        onSaveData();
+      }
       
       if (addNotification) {
         addNotification(
@@ -182,19 +192,23 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
     setShowForm(true);
   };
 
-  const handleDelete = (loanId) => {
+  const handleDelete = async (loanId) => {
     if (window.confirm('Are you sure you want to delete this loan?')) {
       try {
-        const updatedLoans = safeLoans.filter(loan => loan.id !== loanId);
-        
-        const updatedData = {
-          properties: safeProperties,
-          loans: updatedLoans,
-          transactions: safeTransactions,
-          settings: safeSettings
-        };
+        // Delete loan from PocketBase
+        const result = await deleteLoan(loanId);
+        if (!result.success) {
+          console.error('Failed to delete loan:', result.error);
+          if (addNotification) {
+            addNotification('Failed to delete loan - please try again', 'error');
+          }
+          return;
+        }
 
-        onSaveData(updatedData);
+        // Trigger data refresh
+        if (onSaveData) {
+          onSaveData();
+        }
         
         if (addNotification) {
           addNotification('Loan deleted successfully', 'success');

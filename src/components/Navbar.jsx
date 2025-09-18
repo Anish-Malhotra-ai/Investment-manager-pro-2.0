@@ -116,7 +116,7 @@ const Navbar = ({
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
               <SafeIcon icon={FiUser} className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-medium">{user?.name || 'User'}</span>
+            <span className="text-sm font-medium">{user?.user_metadata?.name || 'User'}</span>
             <SafeIcon icon={FiChevronDown} className="w-4 h-4" />
           </button>
 

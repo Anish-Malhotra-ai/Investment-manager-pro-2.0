@@ -1,4 +1,4 @@
-import PocketbaseManager from '../services/PocketbaseManager';
+import SupabaseManager from '../services/SupabaseManager';
 
 // Add notification function
 export const addNotification = (setData, message, type = 'info') => {
@@ -71,7 +71,7 @@ export const clearAllNotifications = async (data, setData, addNotificationCallba
       notifications: []
     };
     
-    await PocketbaseManager.saveUserSettings(updatedSettings);
+    await SupabaseManager.saveUserSettings(updatedSettings);
     setData(prev => ({
       ...prev,
       settings: updatedSettings

@@ -3,9 +3,8 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import DataManager from '../services/DataManager';
-import DummyDataGenerator from '../utils/DummyDataGenerator';
 
-const { FiSave, FiDownload, FiUpload, FiTrash2, FiAlertTriangle, FiCheck, FiDatabase, FiFolder, FiSettings } = FiIcons;
+const { FiSave, FiDownload, FiUpload, FiTrash2, FiAlertTriangle, FiCheck, FiFolder, FiSettings } = FiIcons;
 
 const Settings = ({ settings, properties, loans, transactions, onSaveData }) => {
   const [formData, setFormData] = useState({
@@ -164,11 +163,6 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
     }
   };
 
-  const handleLoadDummyData = () => {
-    setConfirmAction('dummy');
-    setShowConfirm(true);
-  };
-
   const handleResetData = () => {
     setConfirmAction('reset');
     setShowConfirm(true);
@@ -178,14 +172,7 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
     try {
       setLoading(true);
       
-      if (confirmAction === 'dummy') {
-        const dummyData = DummyDataGenerator.generateDummyData();
-        await onSaveData({
-          ...dummyData,
-          settings: formData
-        });
-        alert('Dummy data loaded successfully!');
-      } else if (confirmAction === 'reset') {
+      if (confirmAction === 'reset') {
         await onSaveData({
           properties: [],
           loans: [],
@@ -491,15 +478,6 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
                 <span>Import Data</span>
               </label>
             </div>
-
-            <button
-              onClick={handleLoadDummyData}
-              disabled={loading}
-              className="btn-secondary w-full flex items-center justify-center space-x-2"
-            >
-              <SafeIcon icon={FiDatabase} className="w-5 h-5" />
-              <span>Load Sample Data</span>
-            </button>
           </div>
 
           {/* Development Tools */}
@@ -565,10 +543,7 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
             </div>
 
             <p className="text-gray-300 mb-6">
-              {confirmAction === 'dummy' 
-                ? 'This will add sample data to your account. Existing data will be preserved. Continue?'
-                : 'This will permanently delete all your data including properties, loans, and transactions. This action cannot be undone. Are you absolutely sure?'
-              }
+              This will permanently delete all your data including properties, loans, and transactions. This action cannot be undone. Are you absolutely sure?
             </p>
 
             <div className="flex space-x-3">
@@ -584,9 +559,7 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
               <button
                 onClick={executeConfirmAction}
                 disabled={loading}
-                className={`flex-1 flex items-center justify-center space-x-2 ${
-                  confirmAction === 'reset' ? 'btn-danger' : 'btn-primary'
-                }`}
+                className={`flex-1 flex items-center justify-center space-x-2 btn-danger`}
               >
                 <SafeIcon icon={FiCheck} className="w-4 h-4" />
                 <span>{loading ? 'Processing...' : 'Confirm'}</span>

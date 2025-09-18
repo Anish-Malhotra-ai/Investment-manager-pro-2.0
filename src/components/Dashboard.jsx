@@ -111,12 +111,22 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
 
   const handleAddProperty = async (propertyData) => {
     try {
-      const updatedProperties = [...safeProperties, propertyData];
-      await onSaveData({
-        properties: updatedProperties,
-        loans: safeLoans,
-        transactions: safeTransactions,
-        settings: safeSettings
+      // Import createProperty from DataUtils
+      const { createProperty } = await import('../utils/DataUtils');
+      
+      // Create property in PocketBase
+      const result = await createProperty(propertyData);
+      
+      if (!result.success) {
+        console.error('Failed to create property:', result.error);
+        alert(`Failed to add property: ${result.error}`);
+        return;
+      }
+      
+      // Trigger data refresh by reloading user data
+      const { loadUserData } = await import('../utils/DataUtils');
+      await loadUserData((newData) => {
+        onSaveData(newData, 'Property added successfully');
       });
     } catch (error) {
       console.error('Failed to add property:', error);

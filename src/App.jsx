@@ -10,7 +10,7 @@ import Settings from './components/Settings';
 import WelcomeSplash from './components/WelcomeSplash';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
-import PocketbaseManager from './services/PocketbaseManager';
+import SupabaseManager from './services/SupabaseManager';
 import {
   addNotification,
   formatNotificationTime,
@@ -31,6 +31,9 @@ function App() {
     properties: [],
     loans: [],
     transactions: [],
+    expenses: [],
+    rentals: [],
+    agents: [],
     settings: {
       financialYearStart: '07-01',
       notifications: []
@@ -42,10 +45,10 @@ function App() {
   useEffect(() => {
     const initApp = async () => {
       try {
-        await PocketbaseManager.init();
+        await SupabaseManager.init();
 
-        if (PocketbaseManager.isAuthenticated()) {
-          const currentUser = PocketbaseManager.getCurrentUser();
+        if (SupabaseManager.isAuthenticated()) {
+          const currentUser = SupabaseManager.getCurrentUser();
           setUser(currentUser);
           await loadUserData(setData);
         }

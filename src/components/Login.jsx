@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import PocketbaseManager from '../services/PocketbaseManager';
+import SupabaseManager from '../services/SupabaseManager';
 
 const Login = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,14 +34,14 @@ const Login = ({ onLogin }) => {
     try {
       let result;
       if (isLogin) {
-        result = await PocketbaseManager.login(formData.email, formData.password);
+        result = await SupabaseManager.login(formData.email, formData.password);
       } else {
         if (formData.password !== formData.passwordConfirm) {
           setError('Passwords do not match');
           setLoading(false);
           return;
         }
-        result = await PocketbaseManager.register(
+        result = await SupabaseManager.register(
           formData.email,
           formData.password,
           formData.passwordConfirm,
