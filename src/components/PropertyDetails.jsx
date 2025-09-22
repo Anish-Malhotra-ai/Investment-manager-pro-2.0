@@ -70,8 +70,8 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
                 <SafeIcon icon={FiArrowLeft} className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-xl font-semibold text-white">{property.address}</h1>
-                <p className="text-sm text-gray-400">{property.city}, {property.state} {property.zipCode}</p>
+                <h1 className="text-xl font-semibold text-white">{property.name}</h1>
+                <p className="text-sm text-gray-400">{property.address}</p>
               </div>
             </div>
             <div className="text-right">
@@ -92,11 +92,10 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-                  activeTab === tab.id
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${activeTab === tab.id
                     ? 'border-blue-500 text-blue-400'
                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <SafeIcon icon={tab.icon} className="w-4 h-4" />
                 <span>{tab.label}</span>
@@ -109,17 +108,17 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && (
-          <PropertyInfo 
-            property={property} 
+          <PropertyInfo
+            property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
             metrics={metrics}
             addNotification={addNotification}
           />
         )}
-        
+
         {activeTab === 'rentals' && (
-          <RentalManager 
+          <RentalManager
             property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
@@ -129,9 +128,9 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
             addNotification={addNotification}
           />
         )}
-        
+
         {activeTab === 'expenses' && (
-          <ExpenseManager 
+          <ExpenseManager
             property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
@@ -141,9 +140,9 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
             addNotification={addNotification}
           />
         )}
-        
+
         {activeTab === 'loans' && (
-          <LoanManager 
+          <LoanManager
             property={property}
             propertyId={property.id}
             properties={safeProperties}
@@ -154,9 +153,9 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
             addNotification={addNotification}
           />
         )}
-        
+
         {activeTab === 'agents' && (
-          <AgentManager 
+          <AgentManager
             property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
@@ -164,9 +163,9 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
             addNotification={addNotification}
           />
         )}
-        
+
         {activeTab === 'transactions' && (
-          <TransactionTable 
+          <TransactionTable
             transactions={safeTransactions.filter(t => t && t.propertyId === property.id)}
             propertyId={property.id}
             properties={safeProperties}

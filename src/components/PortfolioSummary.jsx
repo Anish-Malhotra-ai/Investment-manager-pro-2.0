@@ -45,7 +45,7 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
   const buildPortfolioValueExplain = () => {
     const propertyValues = safeProperties.map(property => ({
       address: property.address || property.name || 'Unknown Property',
-      value: Number(property.currentValue || property.purchasePrice || 0)
+      value: Number(property.current_value || property.purchase_price || 0)
     }));
     const total = propertyValues.reduce((sum, p) => sum + p.value, 0);
     return { propertyValues, total, currency };
@@ -53,9 +53,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
 
   const buildPurchasePriceExplain = () => {
     const propertyPrices = safeProperties.map(property => {
-      const basePrice = Number(property.purchasePrice || 0);
-      const acqCosts = Array.isArray(property.acquisitionCosts) ? 
-        property.acquisitionCosts.reduce((sum, cost) => sum + Number(cost.amount || 0), 0) : 0;
+      const basePrice = Number(property.purchase_price || 0);
+      const acqCosts = Array.isArray(property.acquisition_costs) ?
+        property.acquisition_costs.reduce((sum, cost) => sum + Number(cost.amount || 0), 0) : 0;
       return {
         address: property.address || property.name || 'Unknown Property',
         basePrice,
@@ -68,34 +68,34 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
   };
 
   const buildIncomeExplain = () => {
-    const incomeTransactions = safeTransactions.filter(t => 
+    const incomeTransactions = safeTransactions.filter(t =>
       t.type === 'income' && Number(t.amount || 0) > 0
     );
-    const rentalIncome = incomeTransactions.filter(t => 
+    const rentalIncome = incomeTransactions.filter(t =>
       t.category?.toLowerCase().includes('rent') || t.description?.toLowerCase().includes('rent')
     );
-    const otherIncome = incomeTransactions.filter(t => 
+    const otherIncome = incomeTransactions.filter(t =>
       !t.category?.toLowerCase().includes('rent') && !t.description?.toLowerCase().includes('rent')
     );
-    
+
     const rentalTotal = rentalIncome.reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const otherTotal = otherIncome.reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const total = rentalTotal + otherTotal;
-    
+
     return { rentalTotal, otherTotal, total, currency };
   };
 
   const buildExpensesExplain = () => {
-    const expenseTransactions = safeTransactions.filter(t => 
+    const expenseTransactions = safeTransactions.filter(t =>
       t.type === 'expense' && Number(t.amount || 0) > 0
     );
     const categoryTotals = {};
-    
+
     expenseTransactions.forEach(t => {
       const category = t.category || 'Other';
       categoryTotals[category] = (categoryTotals[category] || 0) + Number(t.amount || 0);
     });
-    
+
     const total = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
     return { categoryTotals, total, currency };
   };
@@ -112,19 +112,19 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
   const buildActiveLoansExplain = () => {
     const today = new Date();
     const activeLoans = safeLoans.filter(loan => {
-      if (!loan || !loan.startDate || !loan.propertyId) return false;
-      const startDate = new Date(loan.startDate);
-      const endDate = loan.endDate ? new Date(loan.endDate) : new Date(2099, 11, 31);
+      if (!loan || !loan.start_date || !loan.property_id) return false;
+      const startDate = new Date(loan.start_date);
+      const endDate = loan.end_date ? new Date(loan.end_date) : new Date(2099, 11, 31);
       return startDate <= today && today <= endDate;
     });
 
     // Group loans by property for clear separation
     const loansByProperty = {};
     activeLoans.forEach(loan => {
-      const propertyId = loan.propertyId;
+      const propertyId = loan.property_id;
       const property = safeProperties.find(p => p.id === propertyId);
       const propertyAddress = property?.address || property?.name || `Property ${propertyId}`;
-      
+
       if (!loansByProperty[propertyId]) {
         loansByProperty[propertyId] = {
           propertyAddress,
@@ -134,34 +134,34 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
           totalMonthly: 0
         };
       }
-      
-      const originalAmount = Number(loan.originalAmount || 0);
-      const currentBalance = Number(loan.currentBalance || loan.originalAmount || 0);
-      const monthlyRepayment = Number(loan.regularPaymentAmount || loan.monthlyRepayment || 0);
-      
+
+      const originalAmount = Number(loan.amount || 0);
+      const currentBalance = Number(loan.current_balance || loan.amount || 0);
+      const monthlyRepayment = Number(loan.monthly_payment || 0);
+
       loansByProperty[propertyId].loans.push({
         id: loan.id,
         originalAmount,
         currentBalance,
         monthlyRepayment,
-        interestRate: Number(loan.interestRate || 0)
+        interestRate: Number(loan.interest_rate || 0)
       });
-      
+
       loansByProperty[propertyId].totalOriginal += originalAmount;
       loansByProperty[propertyId].totalCurrent += currentBalance;
       loansByProperty[propertyId].totalMonthly += monthlyRepayment;
     });
-    
+
     // Calculate portfolio totals
     const totalOriginal = Object.values(loansByProperty).reduce((sum, prop) => sum + prop.totalOriginal, 0);
     const totalCurrent = Object.values(loansByProperty).reduce((sum, prop) => sum + prop.totalCurrent, 0);
     const totalMonthly = Object.values(loansByProperty).reduce((sum, prop) => sum + prop.totalMonthly, 0);
-    
-    return { 
-      loansByProperty, 
-      totalOriginal, 
-      totalCurrent, 
-      totalMonthly, 
+
+    return {
+      loansByProperty,
+      totalOriginal,
+      totalCurrent,
+      totalMonthly,
       currency,
       propertiesWithLoans: Object.keys(loansByProperty).length,
       totalLoans: activeLoans.length
@@ -195,9 +195,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <motion.div 
-          className="card" 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
@@ -229,9 +229,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
           </div>
         </motion.div>
 
-        <motion.div 
-          className="card" 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
         >
@@ -263,9 +263,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
           </div>
         </motion.div>
 
-        <motion.div 
-          className="card" 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
@@ -297,9 +297,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
           </div>
         </motion.div>
 
-        <motion.div 
-          className="card" 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
@@ -331,9 +331,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
           </div>
         </motion.div>
 
-        <motion.div 
-          className="card" 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
@@ -356,9 +356,8 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
                   </button>
                 </span>
               </div>
-              <div className={`text-2xl font-bold ${
-                sanitize(safeMetrics.netCashFlow) >= 0 ? 'text-green-400' : 'text-red-400'
-              }`}>
+              <div className={`text-2xl font-bold ${sanitize(safeMetrics.netCashFlow) >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
                 {formatCurrency(safeMetrics.netCashFlow)}
               </div>
               <div className="text-xs text-gray-400 mt-1">
@@ -371,9 +370,9 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
           </div>
         </motion.div>
 
-        <motion.div 
-          className="card" 
-          initial={{ opacity: 0, y: 20 }} 
+        <motion.div
+          className="card"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
         >
@@ -575,7 +574,7 @@ const PortfolioSummary = ({ metrics, properties, loans, transactions, settings }
               </div>
             </div>
           ))}
-          
+
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.15)", marginTop: 8, paddingTop: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600, marginBottom: 4 }}>
               <span>Portfolio Total Outstanding</span>

@@ -4,12 +4,6 @@ const INCOME_TYPES = new Set(["income", "rent", "rental", "other_income"]);
 const EXPENSE_TYPES = new Set(["expense", "maintenance", "repair", "fees", "insurance", "tax", "management_fee", "interest"]);
 const IGNORE_IN_PNL = new Set(["principal"]);
 
-const sanitizeNumberInput = (value) => {
-  if (value === null || value === undefined || value === '') return 0;
-  const num = typeof value === 'string' ? parseFloat(value) : Number(value);
-  return isNaN(num) ? 0 : num;
-};
-
 const filterTransactionsByDateRange = (transactions, startDate, endDate) => {
   return transactions.filter(transaction => {
     if (!transaction.date) return false;
@@ -28,7 +22,7 @@ const getYearRange = (year) => {
 // Enhanced daily conversion function with precise calculations
 export const calculateDailyAmount = (amount, frequency) => {
   const numAmount = sanitize(amount);
-  
+
   switch (frequency?.toLowerCase()) {
     case 'daily':
       return numAmount;
@@ -58,23 +52,23 @@ export const calculateDailyAmount = (amount, frequency) => {
 // Generate rental transactions with precise daily conversion
 export const generateRentalTransactions = (property, startDate, endDate) => {
   const transactions = [];
-  
+
   if (!property || !startDate || !endDate) return transactions;
-  
+
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   // Process property-level rental if exists
   if (property.rental && property.rental.amount) {
     const rental = property.rental;
     const dailyAmount = calculateDailyAmount(rental.amount, rental.frequency || 'monthly');
     const managementFeeRate = sanitize(rental.managementFeeRate || rental.feeRate || 0) / 100;
     const dailyFee = dailyAmount * managementFeeRate;
-    
+
     // Generate daily transactions for the date range
     for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
       const dateStr = currentDate.toISOString().split('T')[0];
-      
+
       // Rental income transaction
       if (dailyAmount > 0) {
         transactions.push({
@@ -90,7 +84,7 @@ export const generateRentalTransactions = (property, startDate, endDate) => {
           originalFrequency: rental.frequency || 'monthly'
         });
       }
-      
+
       // Management fee transaction
       if (dailyFee > 0) {
         transactions.push({
@@ -108,20 +102,20 @@ export const generateRentalTransactions = (property, startDate, endDate) => {
       }
     }
   }
-  
+
   // Process rentals array if exists
   if (Array.isArray(property.rentals)) {
     property.rentals.forEach((rental, index) => {
       if (!rental || !rental.amount) return;
-      
+
       const dailyAmount = calculateDailyAmount(rental.amount, rental.frequency || 'monthly');
       const managementFeeRate = sanitize(rental.managementFeeRate || rental.feeRate || 0) / 100;
       const dailyFee = dailyAmount * managementFeeRate;
       const unitName = rental.unitName || rental.name || `Unit ${index + 1}`;
-      
+
       for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
         const dateStr = currentDate.toISOString().split('T')[0];
-        
+
         // Rental income transaction
         if (dailyAmount > 0) {
           transactions.push({
@@ -138,7 +132,7 @@ export const generateRentalTransactions = (property, startDate, endDate) => {
             unitName: unitName
           });
         }
-        
+
         // Management fee transaction
         if (dailyFee > 0) {
           transactions.push({
@@ -158,21 +152,21 @@ export const generateRentalTransactions = (property, startDate, endDate) => {
       }
     });
   }
-  
+
   // Process units array if exists
   if (Array.isArray(property.units)) {
     property.units.forEach((unit, unitIndex) => {
       if (!unit || !unit.rental || !unit.rental.amount) return;
-      
+
       const rental = unit.rental;
       const dailyAmount = calculateDailyAmount(rental.amount, rental.frequency || 'monthly');
       const managementFeeRate = sanitize(rental.managementFeeRate || rental.feeRate || 0) / 100;
       const dailyFee = dailyAmount * managementFeeRate;
       const unitName = unit.name || `Unit ${unitIndex + 1}`;
-      
+
       for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
         const dateStr = currentDate.toISOString().split('T')[0];
-        
+
         // Rental income transaction
         if (dailyAmount > 0) {
           transactions.push({
@@ -189,7 +183,7 @@ export const generateRentalTransactions = (property, startDate, endDate) => {
             unitName: unitName
           });
         }
-        
+
         // Management fee transaction
         if (dailyFee > 0) {
           transactions.push({
@@ -209,37 +203,37 @@ export const generateRentalTransactions = (property, startDate, endDate) => {
       }
     });
   }
-  
+
   return transactions;
 };
 
 // Generate loan payment transactions with daily conversion
 export const generateLoanPayments = (loans, properties, startDate, endDate) => {
   const transactions = [];
-  
+
   if (!Array.isArray(loans) || !startDate || !endDate) return transactions;
-  
+
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   loans.forEach(loan => {
     if (!loan || loan.status !== 'active' || !loan.monthlyPayment) return;
-    
+
     const property = properties?.find(p => p?.id === loan.propertyId);
     if (!property) return;
-    
+
     // Convert monthly loan payment to daily
     const dailyPayment = calculateDailyAmount(loan.monthlyPayment, 'monthly');
     const interestRate = sanitize(loan.interestRate || 0) / 100 / 365.25; // Daily interest rate
     const currentBalance = sanitize(loan.currentBalance || loan.originalAmount || 0);
-    
+
     // Calculate daily interest and principal portions
     const dailyInterest = currentBalance * interestRate;
     const dailyPrincipal = Math.max(0, dailyPayment - dailyInterest);
-    
+
     for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
       const dateStr = currentDate.toISOString().split('T')[0];
-      
+
       // Daily interest payment
       if (dailyInterest > 0) {
         transactions.push({
@@ -256,7 +250,7 @@ export const generateLoanPayments = (loans, properties, startDate, endDate) => {
           loanId: loan.id
         });
       }
-      
+
       // Daily principal payment
       if (dailyPrincipal > 0) {
         transactions.push({
@@ -275,23 +269,18 @@ export const generateLoanPayments = (loans, properties, startDate, endDate) => {
       }
     }
   });
-  
-  return transactions;
-};
 
-export const computePurchasePrice = (property) => {
-  if (!property) return 0;
-  return sanitize(property.currentValue || property.purchasePrice || 0);
+  return transactions;
 };
 
 export const calculatePropertyMetrics = (property, transactions, rentals, expenses, loans, year = new Date().getFullYear()) => {
   if (!property) return getDefaultMetrics();
 
   const { start: yearStart, end: yearEnd } = getYearRange(year);
-  
+
   // Filter transactions for this property and year
   const yearTransactions = filterTransactionsByDateRange(
-    transactions.filter(t => t.propertyId === property.id),
+    transactions.filter(t => t.property_id === property.id),
     yearStart,
     yearEnd
   );
@@ -318,17 +307,17 @@ export const calculatePropertyMetrics = (property, transactions, rentals, expens
   const netCashFlow = income - totalExpenses;
 
   // Property loan information
-  const propertyLoans = loans.filter(loan => loan.propertyId === property.id && loan.status === 'active');
-  const totalLoanAmount = propertyLoans.reduce((sum, loan) => sum + sanitize(loan.currentBalance || loan.originalAmount), 0);
-  const totalMonthlyLoanPayment = propertyLoans.reduce((sum, loan) => sum + sanitize(loan.monthlyPayment), 0);
+  const propertyLoans = loans.filter(loan => loan.property_id === property.id);
+  const totalLoanAmount = propertyLoans.reduce((sum, loan) => sum + sanitize(loan.current_balance || loan.amount), 0);
+  const totalMonthlyLoanPayment = propertyLoans.reduce((sum, loan) => sum + sanitize(loan.monthly_payment), 0);
 
   // Calculate property value and equity
-  const propertyValue = sanitize(property.currentValue || property.purchasePrice);
+  const propertyValue = sanitize(property.current_value || property.purchase_price);
   const equity = Math.max(0, propertyValue - totalLoanAmount);
   const equityPercentage = propertyValue > 0 ? (equity / propertyValue) * 100 : 0;
 
   // Calculate cash-on-cash return
-  const cashInvested = sanitize(property.downPayment) + sanitize(property.closingCosts) + sanitize(property.renovationCosts);
+  const cashInvested = sanitize(property.down_payment) + sanitize(property.closing_costs) + sanitize(property.renovation_costs);
   const cashOnCashReturn = cashInvested > 0 ? (netCashFlow / cashInvested) * 100 : 0;
 
   // Calculate cap rate
@@ -362,22 +351,24 @@ export const calculatePortfolioMetrics = (properties, loans, transactions, year 
   let activeLoanCount = 0;
   let propertiesWithLoans = 0;
 
+  debugger
+
   // Calculate metrics for each property and aggregate
   properties.forEach(property => {
     if (!property) return;
-    
+
     const metrics = calculatePropertyMetrics(property, transactions, [], [], loans, year);
-    
+
     totalIncome += metrics.income;
     totalExpenses += metrics.expenses;
-    totalValue += sanitize(property.currentValue || property.purchasePrice || 0);
-    
+    totalValue += sanitize(property.current_value || property.purchase_price || 0);
+
     // Calculate purchase price including acquisition costs
-    const basePrice = sanitize(property.purchasePrice || 0);
-    const acqCosts = Array.isArray(property.acquisitionCosts) ? 
-      property.acquisitionCosts.reduce((sum, cost) => sum + sanitize(cost.amount || 0), 0) : 0;
+    const basePrice = sanitize(property.purchase_price || 0);
+    const acqCosts = Array.isArray(property.acquisition_costs) ?
+      property.acquisition_costs.reduce((sum, cost) => sum + sanitize(cost.amount || 0), 0) : 0;
     totalPurchasePrice += basePrice + acqCosts;
-    
+
     totalLoanAmount += metrics.totalLoanAmount;
     totalMonthlyRepayment += metrics.totalMonthlyLoanPayment;
     activeLoanCount += metrics.activeLoanCount;
@@ -403,19 +394,19 @@ export const calculatePortfolioMetrics = (properties, loans, transactions, year 
 };
 
 export const getPropertyLoanInfo = (propertyId, loans) => {
-  const propertyLoans = loans.filter(loan => loan.propertyId === propertyId && loan.status === 'active');
-  
+  const propertyLoans = loans.filter(loan => loan.property_id === propertyId && loan.status === 'active');
+
   return {
     count: propertyLoans.length,
-    totalAmount: propertyLoans.reduce((sum, loan) => sum + sanitize(loan.currentBalance || loan.originalAmount), 0),
-    totalRepayment: propertyLoans.reduce((sum, loan) => sum + sanitize(loan.regularPaymentAmount || loan.monthlyRepayment), 0),
+    totalAmount: propertyLoans.reduce((sum, loan) => sum + sanitize(loan.current_balance || loan.amount), 0),
+    totalRepayment: propertyLoans.reduce((sum, loan) => sum + sanitize(loan.monthly_payment), 0),
     loans: propertyLoans
   };
 };
 
 export const calculateActiveLoanMetrics = (loans) => {
   const activeLoans = loans.filter(loan => loan.status === 'active');
-  
+
   const loansByProperty = {};
   let totalLoanAmount = 0;
   let totalMonthlyRepayment = 0;
@@ -453,25 +444,25 @@ export const calculateActiveLoanMetrics = (loans) => {
 
 export const getActiveRentals = (property) => {
   if (!property || !Array.isArray(property.rentals)) return [];
-  
+
   const today = new Date();
   return property.rentals.filter(rental => {
     if (!rental || !rental.startDate) return false;
-    
+
     const startDate = new Date(rental.startDate);
     const endDate = rental.endDate ? new Date(rental.endDate) : null;
-    
+
     return startDate <= today && (!endDate || endDate >= today);
   });
 };
 
 export const getTotalActiveRentalIncome = (property) => {
   const activeRentals = getActiveRentals(property);
-  
+
   return activeRentals.reduce((total, rental) => {
     const amount = sanitize(rental.amount);
     const frequency = rental.frequency || 'weekly';
-    
+
     // Convert to annual amount
     switch (frequency.toLowerCase()) {
       case 'weekly':
@@ -493,7 +484,7 @@ export const getTotalActiveRentalIncome = (property) => {
 export const formatCurrencyWithFrequency = (amount, frequency) => {
   const formattedAmount = formatCurrency(amount);
   const freq = frequency ? frequency.toLowerCase() : 'weekly';
-  
+
   const frequencyMap = {
     'daily': 'daily',
     'weekly': 'weekly',
@@ -502,7 +493,7 @@ export const formatCurrencyWithFrequency = (amount, frequency) => {
     'quarterly': 'quarterly',
     'annually': 'annually'
   };
-  
+
   return `${formattedAmount} ${frequencyMap[freq] || 'weekly'}`;
 };
 

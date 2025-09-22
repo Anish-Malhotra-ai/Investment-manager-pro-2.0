@@ -6,18 +6,18 @@ import { createLoan, updateLoan, deleteLoan } from '../utils/DataUtils';
 
 const { FiPlus, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiCreditCard } = FiIcons;
 
-function LoanManager({ loans, properties, onSaveData, transactions, settings, propertyId, addNotification }) {
+function LoanManager({ data, propertyId }) {
   const [showForm, setShowForm] = useState(false);
   const [editingLoan, setEditingLoan] = useState(null);
   const [expandedProperties, setExpandedProperties] = useState(new Set());
 
   // Safe defaults for all props
-  const safeLoans = Array.isArray(loans) ? loans : [];
-  const safeProperties = Array.isArray(properties) ? properties : [];
+  const safeLoans = Array.isArray(data.loans) ? data.loans : [];
+  const safeProperties = Array.isArray(data.properties) ? data.properties : [];
 
   // Filter loans based on propertyId
   const propertyLoans = useMemo(
-    () => (propertyId ? safeLoans.filter(l => l && l.propertyId === propertyId) : safeLoans),
+    () => (propertyId ? safeLoans.filter(l => l && l.property_id === propertyId) : safeLoans),
     [safeLoans, propertyId]
   );
 
@@ -28,11 +28,11 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
     } else {
       const grouped = {};
       safeLoans.forEach(loan => {
-        if (loan && loan.propertyId) {
-          if (!grouped[loan.propertyId]) {
-            grouped[loan.propertyId] = [];
+        if (loan && loan.property_id) {
+          if (!grouped[loan.property_id]) {
+            grouped[loan.property_id] = [];
           }
-          grouped[loan.propertyId].push(loan);
+          grouped[loan.property_id].push(loan);
         }
       });
       return grouped;
@@ -43,10 +43,10 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
     propertyId: propertyId || '',
     lender: '',
     loanType: 'conventional',
-    originalAmount: '',
+    amount: '',
     currentBalance: '',
     interestRate: '',
-    loanTerm: '',
+    termYears: '',
     monthlyPayment: '',
     startDate: '',
     status: 'active'
@@ -77,10 +77,10 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
       propertyId: propertyId || '',
       lender: '',
       loanType: 'conventional',
-      originalAmount: '',
+      amount: '',
       currentBalance: '',
       interestRate: '',
-      loanTerm: '',
+      termYears: '',
       monthlyPayment: '',
       startDate: '',
       status: 'active'
@@ -101,14 +101,14 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
     const newErrors = {};
     if (!formData.propertyId) newErrors.propertyId = 'Property is required';
     if (!formData.lender.trim()) newErrors.lender = 'Lender is required';
-    if (!formData.originalAmount || parseFloat(formData.originalAmount) <= 0) {
-      newErrors.originalAmount = 'Original amount must be greater than 0';
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = 'Amount must be greater than 0';
     }
-    if (!formData.interestRate || parseFloat(formData.interestRate) < 0) {
-      newErrors.interestRate = 'Interest rate must be 0 or greater';
+    if (!formData.interestRate || parseFloat(formData.interestRate) < 0 || parseFloat(formData.interestRate) > 100) {
+      newErrors.interestRate = 'Interest rate must be between 0 and 100%';
     }
-    if (!formData.loanTerm || parseInt(formData.loanTerm) <= 0) {
-      newErrors.loanTerm = 'Loan term must be greater than 0';
+    if (!formData.termYears || parseInt(formData.termYears) <= 0) {
+      newErrors.termYears = 'Term years must be greater than 0';
     }
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
 
@@ -122,12 +122,13 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
 
     try {
       const loanData = {
-        ...formData,
-        originalAmount: parseFloat(formData.originalAmount),
-        currentBalance: formData.currentBalance ? parseFloat(formData.currentBalance) : parseFloat(formData.originalAmount),
-        interestRate: parseFloat(formData.interestRate),
-        loanTerm: parseInt(formData.loanTerm),
-        monthlyPayment: formData.monthlyPayment ? parseFloat(formData.monthlyPayment) : 0
+        property_id: formData.propertyId,
+        lender: formData.lender,
+        amount: parseFloat(formData.amount),
+        interest_rate: parseFloat(formData.interestRate) / 100, // Convert percentage to decimal
+        term_years: parseInt(formData.termYears),
+        start_date: formData.startDate,
+        monthly_payment: formData.monthlyPayment ? parseFloat(formData.monthlyPayment) : 0
       };
 
       let result;
@@ -136,9 +137,6 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
         result = await updateLoan(editingLoan.id, loanData);
         if (!result.success) {
           console.error('Failed to update loan:', result.error);
-          if (addNotification) {
-            addNotification('Failed to update loan - please try again', 'error');
-          }
           return;
         }
       } else {
@@ -146,48 +144,31 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
         result = await createLoan(loanData);
         if (!result.success) {
           console.error('Failed to create loan:', result.error);
-          if (addNotification) {
-            addNotification('Failed to create loan - please try again', 'error');
-          }
           return;
         }
       }
 
-      // Trigger data refresh
-      if (onSaveData) {
-        onSaveData();
-      }
-      
-      if (addNotification) {
-        addNotification(
-          editingLoan ? 'Loan updated successfully' : 'Loan added successfully',
-          'success'
-        );
-      }
-      
       setShowForm(false);
       resetForm();
+      window.location.reload();
     } catch (error) {
       console.error('Error saving loan:', error);
-      if (addNotification) {
-        addNotification('Failed to save loan - please try again', 'error');
-      }
     }
   };
 
   const handleEdit = (loan) => {
     setEditingLoan(loan);
     setFormData({
-      propertyId: loan.propertyId,
+      propertyId: loan.property_id,
       lender: loan.lender,
-      loanType: loan.loanType,
-      originalAmount: loan.originalAmount.toString(),
-      currentBalance: loan.currentBalance.toString(),
-      interestRate: loan.interestRate.toString(),
-      loanTerm: loan.loanTerm.toString(),
-      monthlyPayment: loan.monthlyPayment.toString(),
-      startDate: loan.startDate,
-      status: loan.status
+      loanType: loan.loanType || 'conventional',
+      amount: loan.amount.toString(),
+      currentBalance: loan.currentBalance ? loan.currentBalance.toString() : '',
+      interestRate: (loan.interest_rate * 100).toString(),
+      termYears: loan.term_years.toString(),
+      monthlyPayment: loan.monthly_payment.toString(),
+      startDate: loan.start_date,
+      status: loan.status || 'active'
     });
     setShowForm(true);
   };
@@ -199,25 +180,11 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
         const result = await deleteLoan(loanId);
         if (!result.success) {
           console.error('Failed to delete loan:', result.error);
-          if (addNotification) {
-            addNotification('Failed to delete loan - please try again', 'error');
-          }
           return;
         }
-
-        // Trigger data refresh
-        if (onSaveData) {
-          onSaveData();
-        }
-        
-        if (addNotification) {
-          addNotification('Loan deleted successfully', 'success');
-        }
+        window.location.reload();
       } catch (error) {
         console.error('Error deleting loan:', error);
-        if (addNotification) {
-          addNotification('Failed to delete loan - please try again', 'error');
-        }
       }
     }
   };
@@ -228,12 +195,11 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
   };
 
   const getPropertyLoanStats = (propLoans) => {
-    const activeLoans = propLoans.filter(loan => loan && loan.status === 'active');
-    const totalAmount = activeLoans.reduce((sum, loan) => sum + (loan.currentBalance || loan.originalAmount), 0);
-    const totalMonthly = activeLoans.reduce((sum, loan) => sum + (loan.monthlyPayment || 0), 0);
-    
+    const totalAmount = propLoans.reduce((sum, loan) => sum + (loan.currentBalance || loan.amount), 0);
+    const totalMonthly = propLoans.reduce((sum, loan) => sum + (loan.monthly_payment || 0), 0);
+
     return {
-      active: activeLoans.length,
+      active: propLoans.length,
       total: propLoans.length,
       totalAmount,
       totalMonthly
@@ -243,17 +209,7 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
   const renderLoanCard = (loan) => (
     <div key={loan.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
       <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-1">{loan.lender}</h3>
-          <div className="flex items-center space-x-4 text-sm text-gray-400">
-            <span className="capitalize">{loan.loanType}</span>
-            <span className={`px-2 py-1 rounded text-xs ${
-              loan.status === 'active' ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-300'
-            }`}>
-              {loan.status}
-            </span>
-          </div>
-        </div>
+        <h3 className="text-lg font-semibold text-white mb-1">{loan.lender}</h3>
         <div className="flex space-x-2">
           <button
             onClick={() => handleEdit(loan)}
@@ -273,19 +229,19 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
           <p className="text-xs text-gray-400 mb-1">Original Amount</p>
-          <p className="text-white font-medium">{formatCurrency(loan.originalAmount)}</p>
+          <p className="text-white font-medium">{formatCurrency(loan.amount)}</p>
         </div>
         <div>
           <p className="text-xs text-gray-400 mb-1">Current Balance</p>
-          <p className="text-white font-medium">{formatCurrency(loan.currentBalance || loan.originalAmount)}</p>
+          <p className="text-white font-medium">{formatCurrency(loan.currentBalance || loan.amount)}</p>
         </div>
         <div>
           <p className="text-xs text-gray-400 mb-1">Interest Rate</p>
-          <p className="text-white font-medium">{loan.interestRate}%</p>
+          <p className="text-white font-medium">{(loan.interest_rate * 100).toFixed(2)}%</p>
         </div>
         <div>
           <p className="text-xs text-gray-400 mb-1">Monthly Payment</p>
-          <p className="text-white font-medium">{formatCurrency(loan.monthlyPayment || 0)}</p>
+          <p className="text-white font-medium">{formatCurrency(loan.monthly_payment || 0)}</p>
         </div>
       </div>
     </div>
@@ -319,7 +275,7 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
             <h3 className="text-xl font-semibold text-white mb-4">
               {editingLoan ? 'Edit Loan' : 'Add New Loan'}
             </h3>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {!propertyId && (
                 <div>
@@ -377,15 +333,15 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
                   <label className="block text-sm font-medium text-gray-300 mb-2">Original Amount *</label>
                   <input
                     type="number"
-                    name="originalAmount"
-                    value={formData.originalAmount}
+                    name="amount"
+                    value={formData.amount}
                     onChange={handleChange}
-                    className={`form-input ${errors.originalAmount ? 'border-red-500' : ''}`}
+                    className={`form-input ${errors.amount ? 'border-red-500' : ''}`}
                     placeholder="0"
                     step="0.01"
                     min="0"
                   />
-                  {errors.originalAmount && <p className="text-red-400 text-sm mt-1">{errors.originalAmount}</p>}
+                  {errors.amount && <p className="text-red-400 text-sm mt-1">{errors.amount}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Current Balance</label>
@@ -421,14 +377,14 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
                   <label className="block text-sm font-medium text-gray-300 mb-2">Loan Term (years) *</label>
                   <input
                     type="number"
-                    name="loanTerm"
-                    value={formData.loanTerm}
+                    name="termYears"
+                    value={formData.termYears}
                     onChange={handleChange}
-                    className={`form-input ${errors.loanTerm ? 'border-red-500' : ''}`}
+                    className={`form-input ${errors.termYears ? 'border-red-500' : ''}`}
                     placeholder="30"
                     min="1"
                   />
-                  {errors.loanTerm && <p className="text-red-400 text-sm mt-1">{errors.loanTerm}</p>}
+                  {errors.termYears && <p className="text-red-400 text-sm mt-1">{errors.termYears}</p>}
                 </div>
               </div>
 
@@ -523,7 +479,7 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
             Object.entries(groupedLoans).map(([propId, propLoans]) => {
               const stats = getPropertyLoanStats(propLoans);
               const isExpanded = expandedProperties.has(propId);
-              
+
               return (
                 <div key={propId} className="bg-gray-800 rounded-lg border border-gray-700">
                   <button
@@ -531,9 +487,9 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
                     className="w-full p-4 flex items-center justify-between hover:bg-gray-750 transition-colors rounded-t-lg"
                   >
                     <div className="flex items-center space-x-3">
-                      <SafeIcon 
-                        icon={isExpanded ? FiChevronDown : FiChevronRight} 
-                        className="w-5 h-5 text-gray-400" 
+                      <SafeIcon
+                        icon={isExpanded ? FiChevronDown : FiChevronRight}
+                        className="w-5 h-5 text-gray-400"
                       />
                       <div className="text-left">
                         <h3 className="text-lg font-semibold text-white">{getPropertyName(propId)}</h3>
@@ -546,7 +502,7 @@ function LoanManager({ loans, properties, onSaveData, transactions, settings, pr
                     </div>
                     <SafeIcon icon={FiCreditCard} className="w-6 h-6 text-gray-400" />
                   </button>
-                  
+
                   {isExpanded && (
                     <div className="p-4 pt-0 space-y-4">
                       {propLoans.length === 0 ? (

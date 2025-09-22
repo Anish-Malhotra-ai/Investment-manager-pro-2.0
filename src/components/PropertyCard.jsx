@@ -2,8 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
-import { computePurchasePrice, getPropertyLoanInfo, getActiveRentals, getTotalActiveRentalIncome, formatCurrencyWithFrequency } from '../utils/FinancialCalculations';
-import { formatCurrency, sanitize, formatForInput } from '../utils/number';
+import { getActiveRentals, getTotalActiveRentalIncome, formatCurrencyWithFrequency } from '../utils/FinancialCalculations';
+import { formatCurrency, sanitize } from '../utils/number';
 
 const { FiMapPin, FiCalendar, FiDollarSign, FiTrendingUp, FiCreditCard, FiPercent, FiClock, FiUsers } = FiIcons;
 
@@ -21,7 +21,7 @@ const PropertyCard = ({ property, onClick, transactions = [], loans = [] }) => {
   const formatFrequency = (frequency) => {
     const frequencies = {
       'weekly': 'Weekly',
-      'fortnightly': 'Fortnightly', 
+      'fortnightly': 'Fortnightly',
       'monthly': 'Monthly',
       'quarterly': 'Quarterly',
       'annually': 'Annually'
@@ -47,7 +47,7 @@ const PropertyCard = ({ property, onClick, transactions = [], loans = [] }) => {
     .reduce((sum, t) => sum + sanitize(t.amount), 0);
 
   const netIncome = yearlyIncome - yearlyExpenses;
-  const purchasePrice = computePurchasePrice(property);
+  const purchasePrice = property.purchase_price || 0;
   const yieldPercentage = purchasePrice > 0 ? (yearlyIncome / purchasePrice) * 100 : 0;
 
   // Get comprehensive loan information for this property
@@ -109,7 +109,7 @@ const PropertyCard = ({ property, onClick, transactions = [], loans = [] }) => {
               {activeRentals.length === 1 ? 'Active Rental' : `${activeRentals.length} Active Rentals`}
             </span>
           </div>
-          
+
           {activeRentals.length === 1 ? (
             <div className="text-purple-300 font-semibold">
               {formatCurrencyWithFrequency(activeRentals[0].amount, activeRentals[0].frequency)}
@@ -189,7 +189,7 @@ const PropertyCard = ({ property, onClick, transactions = [], loans = [] }) => {
               Active Loans ({activeLoans.length})
             </span>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
               <div className="text-gray-400 text-xs mb-1">Total Loan Amount</div>
@@ -197,7 +197,7 @@ const PropertyCard = ({ property, onClick, transactions = [], loans = [] }) => {
                 {formatCurrency(totalLoanAmount)}
               </div>
             </div>
-            
+
             <div>
               <div className="text-gray-400 text-xs mb-1">Total Monthly Repayment</div>
               <div className="text-cyan-300 font-semibold text-sm">
@@ -216,7 +216,7 @@ const PropertyCard = ({ property, onClick, transactions = [], loans = [] }) => {
                     {formatPercentage(primaryLoan.interestRate)}
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="text-gray-400 text-xs mb-1">Payment Type</div>
                   <div className="text-cyan-300 font-semibold text-sm">

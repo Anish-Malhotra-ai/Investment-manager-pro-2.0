@@ -8,7 +8,7 @@ const { FiEdit, FiSave, FiX, FiHome, FiCalendar, FiDollarSign, FiFileText, FiPlu
 
 const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, settings }) => {
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Initialize form data with acquisition costs
   const initializeFormData = () => ({
     name: property.name || '',
@@ -16,9 +16,9 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
     basePropertyCost: property.basePropertyCost || property.purchasePrice || 0,
     purchaseDate: property.purchaseDate || '',
     currentValue: property.currentValue || property.purchasePrice || 0,
-    propertyType: property.propertyType || 'Residential',
+    propertyType: property.property_type || 'Residential',
     notes: property.notes || '',
-    acquisitionCosts: Array.isArray(property.acquisitionCosts) 
+    acquisitionCosts: Array.isArray(property.acquisitionCosts)
       ? property.acquisitionCosts.map(cost => ({ ...cost }))
       : []
   });
@@ -29,7 +29,7 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
@@ -39,7 +39,7 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
     const { name, value } = e.target;
     // Allow typing with commas and periods
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
@@ -154,7 +154,7 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
       updatedAt: new Date().toISOString()
     };
 
-    const updatedProperties = properties.map(p => 
+    const updatedProperties = properties.map(p =>
       p.id === property.id ? updatedProperty : p
     );
 
@@ -169,14 +169,13 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
   };
 
   // Calculate acquisition costs and totals
-  const acquisitionCosts = property.acquisitionCosts || [];
+  const acquisitionCosts = property.acquisition_costs || [];
   const totalAcquisitionCosts = acquisitionCosts.reduce((sum, cost) => {
-    const amount = typeof cost.amount === 'number' ? cost.amount : parseCurrency(cost.amount);
-    return sum + amount;
+    return sum + (cost.amount || 0);
   }, 0);
-  
-  const basePropertyCost = typeof property.basePropertyCost === 'number' ? property.basePropertyCost : parseCurrency(property.basePropertyCost || property.purchasePrice);
-  const currentValue = typeof property.currentValue === 'number' ? property.currentValue : parseCurrency(property.currentValue || property.purchasePrice);
+
+  const basePropertyCost = property.purchase_price || 0;
+  const currentValue = property.current_value || 0;
   const totalPurchasePrice = basePropertyCost + totalAcquisitionCosts;
   const valueChange = currentValue - basePropertyCost;
   const valueChangePercentage = basePropertyCost > 0 ? (valueChange / basePropertyCost * 100) : 0;
@@ -443,7 +442,7 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
                 <div>
                   <p className="text-gray-400 text-sm">Property Name</p>
                   <p className="text-white font-medium">{property.name}</p>
-                  <p className="text-gray-500 text-xs mt-1">{property.propertyType || 'Residential'}</p>
+                  <p className="text-gray-500 text-xs mt-1">{property.property_type || 'Residential'}</p>
                 </div>
               </div>
 
@@ -469,7 +468,7 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
                 <div>
                   <p className="text-gray-400 text-sm">Purchase Date</p>
                   <p className="text-white font-medium">
-                    {property.purchaseDate ? new Date(property.purchaseDate).toLocaleDateString() : 'Not specified'}
+                    {property.purchase_date ? new Date(property.purchase_date).toLocaleDateString() : 'Not specified'}
                   </p>
                 </div>
               </div>

@@ -138,12 +138,7 @@ function App() {
                     />
                   } />
                   <Route path="/loans" element={
-                    <LoanManager
-                      data={data}
-                      setData={setData}
-                      onSaveData={handleSaveDataWithNotificationCallback}
-                      addNotification={addNotificationCallback}
-                    />
+                    <LoanManager data={data} />
                   } />
                   <Route path="/transactions" element={
                     <TransactionTable

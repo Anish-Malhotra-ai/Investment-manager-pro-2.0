@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import PortfolioSummary from './PortfolioSummary';
 import PropertyCard from './PropertyCard';
 import AddPropertyModal from './AddPropertyModal';
-import { calculatePortfolioMetrics, computePurchasePrice } from '../utils/FinancialCalculations';
+import { calculatePortfolioMetrics } from '../utils/FinancialCalculations';
 import { formatCurrency, sanitize, formatCurrencyForChart } from '../utils/number';
 import DataManager from '../services/DataManager';
 import html2canvas from 'html2canvas';
@@ -113,16 +112,16 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
     try {
       // Import createProperty from DataUtils
       const { createProperty } = await import('../utils/DataUtils');
-      
+
       // Create property in PocketBase
       const result = await createProperty(propertyData);
-      
+
       if (!result.success) {
         console.error('Failed to create property:', result.error);
         alert(`Failed to add property: ${result.error}`);
         return;
       }
-      
+
       // Trigger data refresh by reloading user data
       const { loadUserData } = await import('../utils/DataUtils');
       await loadUserData((newData) => {
@@ -150,7 +149,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
     try {
       const filename = DataManager.generateBackupFilename();
       const result = await DataManager.exportBackup(filename);
-      
+
       if (result.success) {
         localStorage.setItem('lastManualBackup', new Date().toISOString());
       }
@@ -217,7 +216,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
     }
 
     const maxValue = Math.max(...data.map(d => Math.max(
-      sanitize(d?.income), 
+      sanitize(d?.income),
       sanitize(d?.expenses)
     )));
     const chartHeight = 320;
@@ -262,13 +261,13 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
 
             {data.map((item, index) => {
               if (!item) return null;
-              
+
               const x = index * groupWidth + leftMargin + 20;
               const income = sanitize(item.income);
               const expenses = sanitize(item.expenses);
               const incomeHeight = maxValue > 0 ? (income / maxValue) * chartHeight : 0;
               const expenseHeight = maxValue > 0 ? (expenses / maxValue) * chartHeight : 0;
-              
+
               return (
                 <g key={item.year || index}>
                   {/* Income bar */}
@@ -282,7 +281,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                     rx="2"
                   />
                   <text
-                    x={x + barWidth/2}
+                    x={x + barWidth / 2}
                     y={chartHeight - incomeHeight + 10}
                     textAnchor="middle"
                     fill="#FFFFFF"
@@ -291,7 +290,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                   >
                     {income > 0 ? formatCurrency(income) : ''}
                   </text>
-                  
+
                   {/* Expense bar */}
                   <rect
                     x={x + barWidth + 8}
@@ -303,7 +302,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                     rx="2"
                   />
                   <text
-                    x={x + barWidth + 8 + barWidth/2}
+                    x={x + barWidth + 8 + barWidth / 2}
                     y={chartHeight - expenseHeight + 10}
                     textAnchor="middle"
                     fill="#FFFFFF"
@@ -312,7 +311,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                   >
                     {expenses > 0 ? formatCurrency(expenses) : ''}
                   </text>
-                  
+
                   {/* Year label */}
                   <text
                     x={x + barWidth + 4}
@@ -327,7 +326,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                 </g>
               );
             })}
-            
+
             {/* Enhanced Legend */}
             <g transform="translate(120, 10)">
               <rect x="0" y="0" width="180" height="40" fill="#1F2937" rx="8" opacity="0.8" />
@@ -387,35 +386,35 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
           <div className="relative">
             <svg width="320" height="320" viewBox="0 0 320 320">
               <circle cx={centerX} cy={centerY} r={radius + 5} fill="#374151" opacity="0.3" />
-              
+
               {properties.map((property, index) => {
                 if (!property) return null;
-                
-                const value = computePurchasePrice(property);
+
+                const value = property.current_value || 0;
                 const percentage = totalValue > 0 ? (value / totalValue) * 100 : 0;
                 const angle = (percentage / 100) * 360;
                 const startAngle = properties.slice(0, index).reduce((sum, p) => {
                   if (!p) return sum;
-                  const pValue = computePurchasePrice(p);
+                  const pValue = p.current_value || 0;
                   return sum + (totalValue > 0 ? (pValue / totalValue) * 360 : 0);
                 }, 0);
-                
+
                 const startRad = (startAngle - 90) * Math.PI / 180;
                 const endRad = (startAngle + angle - 90) * Math.PI / 180;
-                
+
                 const x1 = centerX + radius * Math.cos(startRad);
                 const y1 = centerY + radius * Math.sin(startRad);
                 const x2 = centerX + radius * Math.cos(endRad);
                 const y2 = centerY + radius * Math.sin(endRad);
-                
+
                 const x3 = centerX + innerRadius * Math.cos(endRad);
                 const y3 = centerY + innerRadius * Math.sin(endRad);
                 const x4 = centerX + innerRadius * Math.cos(startRad);
                 const y4 = centerY + innerRadius * Math.sin(startRad);
-                
+
                 const largeArcFlag = angle > 180 ? 1 : 0;
                 const color = colors[index % colors.length];
-                
+
                 return (
                   <g key={property.id}>
                     <path
@@ -427,8 +426,8 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                     />
                     {percentage > 5 && (
                       <text
-                        x={centerX + (radius - 20) * Math.cos((startAngle + angle/2 - 90) * Math.PI / 180)}
-                        y={centerY + (radius - 20) * Math.sin((startAngle + angle/2 - 90) * Math.PI / 180)}
+                        x={centerX + (radius - 20) * Math.cos((startAngle + angle / 2 - 90) * Math.PI / 180)}
+                        y={centerY + (radius - 20) * Math.sin((startAngle + angle / 2 - 90) * Math.PI / 180)}
                         textAnchor="middle"
                         fill="#FFFFFF"
                         fontSize="12"
@@ -440,7 +439,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
                   </g>
                 );
               })}
-              
+
               <circle cx={centerX} cy={centerY} r={innerRadius} fill="#111827" stroke="#374151" strokeWidth="2" />
               <text x={centerX} y={centerY - 10} textAnchor="middle" fill="#FFFFFF" fontSize="14" fontWeight="bold">
                 Total Value
@@ -450,21 +449,21 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
               </text>
             </svg>
           </div>
-          
+
           {/* Enhanced Legend shows full currency amounts */}
           <div className="mt-6 lg:mt-0 lg:ml-8 space-y-3 max-w-xs">
             {properties.map((property, index) => {
               if (!property) return null;
-              
+
               const color = colors[index % colors.length];
-              const value = computePurchasePrice(property);
+              const value = property.current_value || 0;
               const percentage = totalValue > 0 ? (value / totalValue) * 100 : 0;
-              
+
               return (
                 <div key={property.id} className="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-4 h-4 rounded-full border-2 border-gray-300" 
+                    <div
+                      className="w-4 h-4 rounded-full border-2 border-gray-300"
                       style={{ backgroundColor: color }}
                     ></div>
                     <div>
@@ -490,7 +489,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
           <p className="text-gray-400 mt-1">Overview of your investment portfolio</p>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedYear}
@@ -529,7 +528,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
               <SafeIcon icon={FiSave} className="w-4 h-4" />
               <span className="hidden sm:inline">Backup</span>
             </button>
-            
+
             <button
               onClick={() => setShowAddModal(true)}
               className="btn-primary flex items-center space-x-2"
@@ -579,8 +578,8 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
       )}
 
       {/* Portfolio Summary with Tooltips */}
-      <PortfolioSummary 
-        metrics={portfolioMetrics} 
+      <PortfolioSummary
+        metrics={portfolioMetrics}
         properties={safeProperties}
         loans={safeLoans}
         transactions={safeTransactions}
@@ -590,9 +589,9 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
       {/* Enhanced Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <IncomeExpenseChart data={chartData} />
-        <PortfolioDistributionChart 
-          properties={safeProperties} 
-          totalValue={portfolioMetrics.totalValue} 
+        <PortfolioDistributionChart
+          properties={safeProperties}
+          totalValue={portfolioMetrics.totalValue}
         />
       </div>
 
@@ -615,7 +614,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {safeProperties.map((property) => {
             if (!property || !property.id) return null;
-            
+
             return (
               <PropertyCard
                 key={property.id}

@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
-import { computePurchasePrice } from '../utils/FinancialCalculations';
 import { sanitizeNumberInput } from '../utils/number';
 
 const {
@@ -99,8 +98,8 @@ const Sidebar = ({
               key={tab.id}
               onClick={() => navigate(tab.path)}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActiveTab(tab.path)
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
                 }`}
             >
               <SafeIcon icon={tab.icon} className="w-5 h-5 flex-shrink-0" />
@@ -142,8 +141,8 @@ const Sidebar = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${isPropertyActive() && location.pathname === `/property/${property.id}`
-                        ? 'bg-blue-600/20 border-blue-500 text-white'
-                        : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                      ? 'bg-blue-600/20 border-blue-500 text-white'
+                      : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
                       }`}
                   >
                     <div className="flex items-start justify-between">
@@ -159,7 +158,7 @@ const Sidebar = ({
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-400">Value:</span>
                             <span className="text-green-400 font-medium">
-                              {formatCurrency(computePurchasePrice(property))}
+                              {formatCurrency(property.purchase_price || 0)}
                             </span>
                           </div>
 
