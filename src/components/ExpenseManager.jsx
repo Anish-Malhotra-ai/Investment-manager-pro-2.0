@@ -20,7 +20,7 @@ const __makeTx = ({ propertyId, amount, date=new Date(), category="", descriptio
   ...meta,
 });
 
-const ExpenseManager = ({ property, properties, onSaveData, loans, transactions, settings }) => {
+const ExpenseManager = ({ property, properties, onSaveData, loans, transactions, settings, expenses = [] }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [formData, setFormData] = useState({
@@ -107,7 +107,7 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
       const expenseData = {
         ...formData,
         amount: parseCurrency(formData.amount),
-        propertyId: property.id
+        property_id: property.id
       };
 
       let savedExpense;
@@ -131,14 +131,14 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
 
       // Create corresponding transaction in PocketBase
       const transactionData = {
-        propertyId: property.id,
+        property_id: property.id,
         type: 'expense',
         category: expenseData.category,
         description: expenseData.description,
         amount: -Math.abs(expenseData.amount), // Expenses are negative
         date: expenseData.date,
         payee: expenseData.vendor || '',
-        expenseId: savedExpense.id,
+        expense_id: savedExpense.id,
         deductible: expenseData.deductible,
         notes: expenseData.notes
       };
@@ -213,7 +213,8 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
     resetForm();
   };
 
-  const expenses = property.expenses || [];
+  // Filter expenses for this specific property
+  const propertyExpenses = expenses.filter(expense => expense.property_id === property.id);
 
   const categoryColors = {
     'Maintenance': 'bg-orange-900/30 text-orange-400',
@@ -228,7 +229,7 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
   return (
     <div className="space-y-6">
       {/* Expenses List */}
-      {expenses.length === 0 ? (
+      {propertyExpenses.length === 0 ? (
         <div className="card text-center py-12">
           <SafeIcon icon={FiReceipt} className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Expenses Added</h3>
@@ -242,7 +243,7 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
         </div>
       ) : (
         <div className="grid gap-4">
-          {expenses.map((expense) => (
+          {propertyExpenses.map((expense) => (
             <motion.div
               key={expense.id}
               initial={{ opacity: 0, y: 20 }}

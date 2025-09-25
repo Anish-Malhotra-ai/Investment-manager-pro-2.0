@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS transactions (
     amount DECIMAL(15,2) NOT NULL,
     date DATE NOT NULL,
     description TEXT,
+    payee TEXT,
+    expense_id UUID,
+    deductible BOOLEAN DEFAULT FALSE,
+    notes TEXT,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -60,6 +64,9 @@ CREATE TABLE IF NOT EXISTS expenses (
     amount DECIMAL(15,2) NOT NULL,
     date DATE NOT NULL,
     description TEXT,
+    vendor TEXT,
+    deductible BOOLEAN DEFAULT FALSE,
+    notes TEXT,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

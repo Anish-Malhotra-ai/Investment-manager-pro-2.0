@@ -218,10 +218,7 @@ export const deleteLoan = async (id) => {
 export const createExpense = async (expenseData) => {
   try {
     const result = await SupabaseManager.createExpense(expenseData);
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to create expense');
-    }
-    return { success: true, expense: result.expense };
+    return result;
   } catch (error) {
     console.error('Failed to create expense:', error);
     return { success: false, error: error.message };
@@ -231,13 +228,10 @@ export const createExpense = async (expenseData) => {
 export const updateExpense = async (id, expenseData) => {
   try {
     const result = await SupabaseManager.updateExpense(id, expenseData);
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update expense');
-    }
-    return result.expense;
+    return result;
   } catch (error) {
     console.error('Failed to update expense:', error);
-    throw error;
+    return { success: false, error: error.message };
   }
 };
 

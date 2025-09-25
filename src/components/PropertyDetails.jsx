@@ -23,6 +23,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
   const safeLoans = Array.isArray(data.loans) ? data.loans : [];
   const safeTransactions = Array.isArray(data.transactions) ? data.transactions : [];
   const safeRentals = Array.isArray(data.rentals) ? data.rentals : [];
+  const safeExpenses = Array.isArray(data.expenses) ? data.expenses : [];
   const safeSettings = data.settings && typeof data.settings === 'object' ? data.settings : {};
 
   const property = safeProperties.find(p => p && p.id === id);
@@ -138,6 +139,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
             onSaveData={handleSaveDataWithNotification}
             loans={safeLoans}
             transactions={safeTransactions}
+            expenses={safeExpenses}
             settings={safeSettings}
             addNotification={addNotification}
           />
