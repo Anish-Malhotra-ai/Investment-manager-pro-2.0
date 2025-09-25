@@ -54,8 +54,8 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
     { id: 'transactions', label: 'Transactions', icon: FiList }
   ];
 
-  const handleSaveDataWithNotification = (newData) => {
-    onSaveData(newData);
+  const handleSaveDataWithNotification = (newData, actionDescription) => {
+    onSaveData(newData, actionDescription);
   };
 
   return (

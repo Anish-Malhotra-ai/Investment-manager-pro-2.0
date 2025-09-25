@@ -145,9 +145,10 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
 
       await createTransaction(transactionData);
 
-      // Trigger data refresh
+      // Trigger data refresh with notification
       if (onSaveData) {
-        onSaveData();
+        const actionDescription = editingExpense ? 'Expense updated successfully' : 'Expense created successfully';
+        onSaveData(null, actionDescription);
       }
       
       setShowAddForm(false);
@@ -198,9 +199,9 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
         return;
       }
 
-      // Trigger data refresh
+      // Trigger data refresh with notification
       if (onSaveData) {
-        onSaveData();
+        onSaveData(null, 'Expense deleted successfully');
       }
     } catch (error) {
       console.error('Error deleting expense:', error);
