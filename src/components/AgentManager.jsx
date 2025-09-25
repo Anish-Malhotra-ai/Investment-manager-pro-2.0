@@ -6,17 +6,15 @@ import { createAgent, updateAgent, deleteAgent } from '../utils/DataUtils';
 
 const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin } = FiIcons;
 
-const AgentManager = ({ property, properties, onSaveData, loans, transactions, settings }) => {
+const AgentManager = ({ property, properties, onSaveData, agents, loans, transactions, settings }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    role: 'Property Manager',
-    company: '',
     email: '',
     phone: '',
-    address: '',
-    notes: ''
+    company: '',
+    specialization: ''
   });
   const [errors, setErrors] = useState({});
 
@@ -33,12 +31,10 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
   const resetForm = () => {
     setFormData({
       name: '',
-      role: 'Property Manager',
-      company: '',
       email: '',
       phone: '',
-      address: '',
-      notes: ''
+      company: '',
+      specialization: ''
     });
     setErrors({});
   };
@@ -74,8 +70,7 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
 
     try {
       const agentData = {
-        ...formData,
-        propertyId: property.id
+        ...formData
       };
 
       let result;
@@ -142,12 +137,12 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
     resetForm();
   };
 
-  const agents = property.agents || [];
+  const safeAgents = Array.isArray(agents) ? agents : [];
 
   return (
     <div className="space-y-6">
       {/* Agents List */}
-      {agents.length === 0 ? (
+      {safeAgents.length === 0 ? (
         <div className="card text-center py-12">
           <SafeIcon icon={FiUser} className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Agents Added</h3>
@@ -161,7 +156,7 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
         </div>
       ) : (
         <div className="grid gap-4">
-          {agents.map((agent) => (
+          {safeAgents.map((agent) => (
             <motion.div
               key={agent.id}
               initial={{ opacity: 0, y: 20 }}
@@ -198,19 +193,20 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
                       </div>
                     )}
 
-                    {agent.address && (
-                      <div className="flex items-center space-x-2 md:col-span-2">
-                        <SafeIcon icon={FiMapPin} className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-300">{agent.address}</span>
+                    {agent.company && (
+                      <div className="flex items-center space-x-2">
+                        <SafeIcon icon={FiUser} className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-300">{agent.company}</span>
+                      </div>
+                    )}
+
+                    {agent.specialization && (
+                      <div className="flex items-center space-x-2">
+                        <SafeIcon icon={FiUser} className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-300">{agent.specialization}</span>
                       </div>
                     )}
                   </div>
-
-                  {agent.notes && (
-                    <div className="mt-3 p-3 bg-gray-700/30 rounded">
-                      <p className="text-gray-300 text-sm">{agent.notes}</p>
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex space-x-2 ml-4">
@@ -275,20 +271,16 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Role
+                      Specialization
                     </label>
-                    <select
-                      name="role"
-                      value={formData.role}
+                    <input
+                      type="text"
+                      name="specialization"
+                      value={formData.specialization}
                       onChange={handleChange}
-                      className="form-select"
-                    >
-                      <option value="Property Manager">Property Manager</option>
-                      <option value="Real Estate Agent">Real Estate Agent</option>
-                      <option value="Leasing Agent">Leasing Agent</option>
-                      <option value="Maintenance Coordinator">Maintenance Coordinator</option>
-                      <option value="Other">Other</option>
-                    </select>
+                      className="form-input"
+                      placeholder="e.g., Property Management, Real Estate Sales"
+                    />
                   </div>
 
                   <div>
@@ -334,33 +326,6 @@ const AgentManager = ({ property, properties, onSaveData, loans, transactions, s
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Address
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      className="form-input"
-                      placeholder="Office address"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Notes
-                  </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows="3"
-                    className="form-textarea"
-                    placeholder="Additional notes about this agent..."
-                  />
                 </div>
 
                 <div className="flex space-x-3 pt-4">

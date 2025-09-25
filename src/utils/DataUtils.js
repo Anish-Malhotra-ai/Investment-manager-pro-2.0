@@ -306,12 +306,12 @@ export const updateAgent = async (id, agentData) => {
   try {
     const result = await SupabaseManager.updateAgent(id, agentData);
     if (!result.success) {
-      throw new Error(result.error || 'Failed to update agent');
+      return { success: false, error: result.error || 'Failed to update agent' };
     }
-    return result.agent;
+    return { success: true, agent: result.agent };
   } catch (error) {
     console.error('Failed to update agent:', error);
-    throw error;
+    return { success: false, error: error.message };
   }
 };
 
