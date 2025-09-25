@@ -147,14 +147,14 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
 
         {activeTab === 'loans' && (
           <LoanManager
-            property={property}
+            data={{
+              loans: safeLoans,
+              properties: safeProperties,
+              transactions: safeTransactions,
+              settings: safeSettings
+            }}
             propertyId={property.id}
-            properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
-            loans={safeLoans}
-            transactions={safeTransactions}
-            settings={safeSettings}
-            addNotification={addNotification}
           />
         )}
 

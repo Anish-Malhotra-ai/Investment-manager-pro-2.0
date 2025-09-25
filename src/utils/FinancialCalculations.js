@@ -351,7 +351,6 @@ export const calculatePortfolioMetrics = (properties, loans, transactions, year 
   let activeLoanCount = 0;
   let propertiesWithLoans = 0;
 
-  debugger
 
   // Calculate metrics for each property and aggregate
   properties.forEach(property => {

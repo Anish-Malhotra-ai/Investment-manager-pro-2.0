@@ -192,12 +192,12 @@ export const updateLoan = async (id, loanData) => {
   try {
     const result = await SupabaseManager.updateLoan(id, loanData);
     if (!result.success) {
-      throw new Error(result.error || 'Failed to update loan');
+      return { success: false, error: result.error || 'Failed to update loan' };
     }
-    return result.loan;
+    return { success: true, loan: result.loan };
   } catch (error) {
     console.error('Failed to update loan:', error);
-    throw error;
+    return { success: false, error: error.message };
   }
 };
 

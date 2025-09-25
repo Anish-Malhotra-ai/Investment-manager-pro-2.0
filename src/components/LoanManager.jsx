@@ -6,7 +6,7 @@ import { createLoan, updateLoan, deleteLoan } from '../utils/DataUtils';
 
 const { FiPlus, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiCreditCard } = FiIcons;
 
-function LoanManager({ data, propertyId }) {
+function LoanManager({ data, propertyId, onSaveData }) {
   const [showForm, setShowForm] = useState(false);
   const [editingLoan, setEditingLoan] = useState(null);
   const [expandedProperties, setExpandedProperties] = useState(new Set());
@@ -150,7 +150,12 @@ function LoanManager({ data, propertyId }) {
 
       setShowForm(false);
       resetForm();
-      window.location.reload();
+      
+      // Trigger data refresh with notification
+      if (onSaveData) {
+        const actionDescription = editingLoan ? 'Loan updated successfully' : 'Loan created successfully';
+        onSaveData(null, actionDescription);
+      }
     } catch (error) {
       console.error('Error saving loan:', error);
     }
@@ -182,7 +187,11 @@ function LoanManager({ data, propertyId }) {
           console.error('Failed to delete loan:', result.error);
           return;
         }
-        window.location.reload();
+        
+        // Trigger data refresh with notification
+        if (onSaveData) {
+          onSaveData(null, 'Loan deleted successfully');
+        }
       } catch (error) {
         console.error('Error deleting loan:', error);
       }
