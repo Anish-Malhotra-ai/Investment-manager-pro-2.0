@@ -8,22 +8,24 @@ import { createRental, updateRental, deleteRental, createTransaction } from '../
 
 const { FiEdit, FiTrash2, FiX, FiUsers, FiCopy, FiBell, FiEye, FiCheck } = FiIcons;
 
-const RentalManager = ({ property, properties, onSaveData, loans, transactions, settings }) => {
+const RentalManager = ({ property, properties, rentals, onSaveData, loans, transactions, settings }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRental, setEditingRental] = useState(null);
   const [showSchedulePreview, setShowSchedulePreview] = useState(false);
   const [scheduleData, setScheduleData] = useState([]);
   const [formData, setFormData] = useState({
-    tenantName: '',
-    roomDescription: '',
-    amount: '',
+    property_id: property?.id || '',
+    tenant_name: '',
+    monthly_rent: '',
+    lease_start: new Date().toISOString().split('T')[0],
+    lease_end: '',
+    deposit: '',
+    room_description: '',
     frequency: 'Weekly',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: '',
-    bondAmount: '',
+    bond_amount: '',
     notes: '',
-    reminderDate: '',
-    managementFeePercentage: ''
+    reminder_date: '',
+    management_fee_percentage: ''
   });
   const [errors, setErrors] = useState({});
 
@@ -51,16 +53,18 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
 
   const resetForm = () => {
     setFormData({
-      tenantName: '',
-      roomDescription: '',
-      amount: '',
+      property_id: property?.id || '',
+      tenant_name: '',
+      monthly_rent: '',
+      lease_start: new Date().toISOString().split('T')[0],
+      lease_end: '',
+      deposit: '',
+      room_description: '',
       frequency: 'Weekly',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
-      bondAmount: '',
+      bond_amount: '',
       notes: '',
-      reminderDate: '',
-      managementFeePercentage: ''
+      reminder_date: '',
+      management_fee_percentage: ''
     });
     setErrors({});
     setScheduleData([]);
@@ -79,11 +83,11 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
-    if (['amount', 'bondAmount', 'managementFeePercentage'].includes(name)) {
+    if (['monthly_rent', 'deposit', 'bond_amount', 'management_fee_percentage'].includes(name)) {
       const sanitized = parseCurrency(value);
       let formatted;
       
-      if (name === 'managementFeePercentage') {
+      if (name === 'management_fee_percentage') {
         formatted = sanitized > 0 ? sanitized.toString() : '';
       } else {
         formatted = sanitized > 0 ? formatForInput(sanitized) : '';
@@ -96,17 +100,17 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.tenantName.trim()) {
-      newErrors.tenantName = 'Tenant name is required';
+    if (!formData.tenant_name.trim()) {
+      newErrors.tenant_name = 'Tenant name is required';
     }
 
-    const amount = parseCurrency(formData.amount);
+    const amount = parseCurrency(formData.monthly_rent);
     if (!amount || amount <= 0) {
-      newErrors.amount = 'Valid rental amount is required';
+      newErrors.monthly_rent = 'Valid rental amount is required';
     }
 
-    if (!formData.startDate) {
-      newErrors.startDate = 'Start date is required';
+    if (!formData.lease_start) {
+      newErrors.lease_start = 'Start date is required';
     }
 
     setErrors(newErrors);
@@ -118,19 +122,19 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
 
     const rentalData = {
       id: editingRental?.id || Date.now().toString(),
-      tenantName: formData.tenantName,
-      amount: parseCurrency(formData.amount),
+      tenant_name: formData.tenant_name,
+      monthly_rent: parseCurrency(formData.monthly_rent),
       frequency: formData.frequency,
-      startDate: formData.startDate,
-      endDate: formData.endDate || '',
-      managementFeePercentage: parseCurrency(formData.managementFeePercentage)
+      lease_start: formData.lease_start,
+      lease_end: formData.lease_end || '',
+      management_fee_percentage: parseCurrency(formData.management_fee_percentage)
     };
 
     // Generate schedule using FinancialCalculations
     const dailyTransactions = generateRentalTransactions(property, {
       ...rentalData,
-      leaseStartDate: rentalData.startDate,
-      leaseEndDate: rentalData.endDate || new Date(new Date(rentalData.startDate).getFullYear() + 1, new Date(rentalData.startDate).getMonth(), new Date(rentalData.start).getDate()).toISOString().split('T')[0]
+      leaseStartDate: rentalData.lease_start,
+      leaseEndDate: rentalData.lease_end || new Date(new Date(rentalData.lease_start).getFullYear() + 1, new Date(rentalData.lease_start).getMonth(), new Date(rentalData.lease_start).getDate()).toISOString().split('T')[0]
     });
 
     // Group by month for preview
@@ -165,12 +169,18 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
 
     try {
       const rentalData = {
-        ...formData,
-        amount: parseCurrency(formData.amount),
-        bondAmount: parseCurrency(formData.bondAmount),
-        managementFeePercentage: parseCurrency(formData.managementFeePercentage),
-        reminderDate: formData.reminderDate || null,
-        propertyId: property.id
+        property_id: formData.property_id || property.id,
+        tenant_name: formData.tenant_name,
+        monthly_rent: parseCurrency(formData.monthly_rent),
+        lease_start: formData.lease_start,
+        lease_end: formData.lease_end || null,
+        deposit: parseCurrency(formData.deposit),
+        room_description: formData.room_description,
+        frequency: formData.frequency,
+        bond_amount: parseCurrency(formData.bond_amount),
+        notes: formData.notes,
+        reminder_date: formData.reminder_date || null,
+        management_fee_percentage: parseCurrency(formData.management_fee_percentage)
       };
 
       let savedRental;
@@ -195,8 +205,8 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
       // Generate daily transactions for the rental
       const newTransactions = generateRentalTransactions(property, {
         ...savedRental,
-        leaseStartDate: savedRental.startDate,
-        leaseEndDate: savedRental.endDate || new Date(new Date(savedRental.startDate).getFullYear() + 1, new Date(savedRental.startDate).getMonth(), new Date(savedRental.startDate).getDate()).toISOString().split('T')[0]
+        leaseStartDate: savedRental.lease_start,
+        leaseEndDate: savedRental.lease_end || new Date(new Date(savedRental.lease_start).getFullYear() + 1, new Date(savedRental.lease_start).getMonth(), new Date(savedRental.lease_start).getDate()).toISOString().split('T')[0]
       });
 
       // Create transactions in PocketBase
@@ -222,11 +232,18 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
 
   const handleEdit = (rental) => {
     setFormData({
-      ...rental,
-      amount: formatForInput(rental.amount),
-      bondAmount: formatForInput(rental.bondAmount || 0),
-      managementFeePercentage: rental.managementFeePercentage?.toString() || '',
-      reminderDate: rental.reminderDate || ''
+      property_id: rental.property_id || property.id,
+      tenant_name: rental.tenant_name,
+      monthly_rent: formatForInput(rental.monthly_rent),
+      lease_start: rental.lease_start,
+      lease_end: rental.lease_end || '',
+      deposit: formatForInput(rental.deposit || 0),
+      room_description: rental.room_description || '',
+      frequency: rental.frequency,
+      bond_amount: formatForInput(rental.bond_amount || 0),
+      notes: rental.notes || '',
+      reminder_date: rental.reminder_date || '',
+      management_fee_percentage: rental.management_fee_percentage?.toString() || ''
     });
     setEditingRental(rental);
     setShowAddForm(true);
@@ -234,15 +251,18 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
 
   const handleAddSimilar = (rental) => {
     setFormData({
-      ...rental,
-      id: undefined,
-      tenantName: '',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
-      reminderDate: '',
-      amount: formatForInput(rental.amount),
-      bondAmount: formatForInput(rental.bondAmount || 0),
-      managementFeePercentage: rental.managementFeePercentage?.toString() || ''
+      property_id: rental.property_id || property.id,
+      tenant_name: '',
+      monthly_rent: formatForInput(rental.monthly_rent),
+      lease_start: new Date().toISOString().split('T')[0],
+      lease_end: rental.lease_end || '',
+      deposit: formatForInput(rental.deposit || 0),
+      room_description: rental.room_description || '',
+      frequency: rental.frequency,
+      bond_amount: formatForInput(rental.bond_amount || 0),
+      notes: '',
+      reminder_date: '',
+      management_fee_percentage: rental.management_fee_percentage?.toString() || ''
     });
     setEditingRental(null);
     setShowAddForm(true);
@@ -278,18 +298,21 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
 
   const isRentalActive = (rental) => {
     const today = new Date();
-    const startDate = new Date(rental.startDate);
-    const endDate = rental.endDate ? new Date(rental.endDate) : null;
+    const startDate = new Date(rental.lease_start);
+    const endDate = rental.lease_end ? new Date(rental.lease_end) : null;
     
     return today >= startDate && (!endDate || today <= endDate);
   };
 
-  const rentals = property.rentals || [];
+  // Filter rentals for this specific property from the global rentals array
+  const propertyRentals = Array.isArray(rentals) 
+    ? rentals.filter(rental => rental && rental.property_id === property?.id)
+    : [];
 
   return (
     <div className="space-y-6">
       {/* Rentals List */}
-      {rentals.length === 0 ? (
+      {propertyRentals.length === 0 ? (
         <div className="card text-center py-12">
           <SafeIcon icon={FiUsers} className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Rentals Added</h3>
@@ -303,7 +326,7 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
         </div>
       ) : (
         <div className="grid gap-4">
-          {rentals.map((rental) => (
+          {propertyRentals.map((rental) => (
             <motion.div
               key={rental.id}
               initial={{ opacity: 0, y: 20 }}
@@ -320,14 +343,14 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                         <SafeIcon icon={FiUsers} className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">{rental.tenantName}</h3>
-                        {rental.roomDescription && (
-                          <p className="text-gray-400 text-sm">{rental.roomDescription}</p>
+                        <h3 className="font-semibold text-white">{rental.tenant_name}</h3>
+                        {rental.room_description && (
+                          <p className="text-gray-400 text-sm">{rental.room_description}</p>
                         )}
-                        {rental.reminderDate && (
+                        {rental.reminder_date && (
                           <div className="text-xs text-yellow-400 flex items-center mt-1">
                             <SafeIcon icon={FiBell} className="w-3 h-3 mr-1" />
-                            Reminder: {new Date(rental.reminderDate).toLocaleDateString()}
+                            Reminder: {new Date(rental.reminder_date).toLocaleDateString()}
                           </div>
                         )}
                       </div>
@@ -345,37 +368,44 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                     <div>
                       <p className="text-gray-400">Rental Amount</p>
                       <p className="text-white font-medium">
-                        {formatForInput(rental.amount)} {rental.frequency}
+                        {formatForInput(rental.monthly_rent)} {rental.frequency}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-gray-400">Start Date</p>
                       <p className="text-white font-medium">
-                        {new Date(rental.startDate).toLocaleDateString()}
+                        {new Date(rental.lease_start).toLocaleDateString()}
                       </p>
                     </div>
 
-                    {rental.endDate && (
+                    {rental.lease_end && (
                       <div>
                         <p className="text-gray-400">End Date</p>
                         <p className="text-white font-medium">
-                          {new Date(rental.endDate).toLocaleDateString()}
+                          {new Date(rental.lease_end).toLocaleDateString()}
                         </p>
                       </div>
                     )}
 
-                    {rental.bondAmount > 0 && (
+                    {rental.deposit > 0 && (
                       <div>
-                        <p className="text-gray-400">Bond Amount</p>
-                        <p className="text-white font-medium">{formatForInput(rental.bondAmount)}</p>
+                        <p className="text-gray-400">Deposit</p>
+                        <p className="text-white font-medium">{formatForInput(rental.deposit)}</p>
                       </div>
                     )}
 
-                    {rental.managementFeePercentage > 0 && (
+                    {rental.bond_amount > 0 && (
+                      <div>
+                        <p className="text-gray-400">Bond Amount</p>
+                        <p className="text-white font-medium">{formatForInput(rental.bond_amount)}</p>
+                      </div>
+                    )}
+
+                    {rental.management_fee_percentage > 0 && (
                       <div>
                         <p className="text-gray-400">Management Fee</p>
-                        <p className="text-white font-medium">{rental.managementFeePercentage}%</p>
+                        <p className="text-white font-medium">{rental.management_fee_percentage}%</p>
                       </div>
                     )}
                   </div>
@@ -446,13 +476,13 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       </label>
                       <input
                         type="text"
-                        name="tenantName"
-                        value={formData.tenantName}
+                        name="tenant_name"
+                        value={formData.tenant_name}
                         onChange={handleChange}
-                        className={`form-input ${errors.tenantName ? 'border-red-500' : ''}`}
+                        className={`form-input ${errors.tenant_name ? 'border-red-500' : ''}`}
                         placeholder="e.g., John Smith"
                       />
-                      {errors.tenantName && <p className="text-red-400 text-sm mt-1">{errors.tenantName}</p>}
+                      {errors.tenant_name && <p className="text-red-400 text-sm mt-1">{errors.tenant_name}</p>}
                     </div>
 
                     <div>
@@ -461,8 +491,8 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       </label>
                       <input
                         type="text"
-                        name="roomDescription"
-                        value={formData.roomDescription}
+                        name="room_description"
+                        value={formData.room_description}
                         onChange={handleChange}
                         className="form-input"
                         placeholder="e.g., Master Bedroom, Entire Property"
@@ -476,14 +506,14 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       <input
                         type="text"
                         inputMode="decimal"
-                        name="amount"
-                        value={formData.amount}
+                        name="monthly_rent"
+                        value={formData.monthly_rent}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`form-input ${errors.amount ? 'border-red-500' : ''}`}
+                        className={`form-input ${errors.monthly_rent ? 'border-red-500' : ''}`}
                         placeholder="450"
                       />
-                      {errors.amount && <p className="text-red-400 text-sm mt-1">{errors.amount}</p>}
+                      {errors.monthly_rent && <p className="text-red-400 text-sm mt-1">{errors.monthly_rent}</p>}
                     </div>
 
                     <div>
@@ -509,12 +539,12 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       </label>
                       <input
                         type="date"
-                        name="startDate"
-                        value={formData.startDate}
+                        name="lease_start"
+                        value={formData.lease_start}
                         onChange={handleChange}
-                        className={`form-input ${errors.startDate ? 'border-red-500' : ''}`}
+                        className={`form-input ${errors.lease_start ? 'border-red-500' : ''}`}
                       />
-                      {errors.startDate && <p className="text-red-400 text-sm mt-1">{errors.startDate}</p>}
+                      {errors.lease_start && <p className="text-red-400 text-sm mt-1">{errors.lease_start}</p>}
                     </div>
 
                     <div>
@@ -523,8 +553,8 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       </label>
                       <input
                         type="date"
-                        name="endDate"
-                        value={formData.endDate}
+                        name="lease_end"
+                        value={formData.lease_end}
                         onChange={handleChange}
                         className="form-input"
                       />
@@ -537,8 +567,24 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       <input
                         type="text"
                         inputMode="decimal"
-                        name="bondAmount"
-                        value={formData.bondAmount}
+                        name="bond_amount"
+                        value={formData.bond_amount}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="form-input"
+                        placeholder="1800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Deposit Amount
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        name="deposit"
+                        value={formData.deposit}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className="form-input"
@@ -552,8 +598,8 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       </label>
                       <input
                         type="text"
-                        name="managementFeePercentage"
-                        value={formData.managementFeePercentage}
+                        name="management_fee_percentage"
+                        value={formData.management_fee_percentage}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className="form-input"
@@ -568,8 +614,8 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                       </label>
                       <input
                         type="date"
-                        name="reminderDate"
-                        value={formData.reminderDate}
+                        name="reminder_date"
+                        value={formData.reminder_date}
                         onChange={handleChange}
                         className="form-input"
                       />
@@ -611,7 +657,7 @@ const RentalManager = ({ property, properties, onSaveData, loans, transactions, 
                   <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
                     <h3 className="text-lg font-semibold text-blue-400 mb-2">Rental Schedule Preview</h3>
                     <p className="text-gray-300 text-sm">
-                      This shows how daily transactions will be generated for {formData.tenantName} from {formData.startDate} to {formData.endDate || 'ongoing'}.
+                      This shows how daily transactions will be generated for {formData.tenant_name} from {formData.lease_start} to {formData.lease_end || 'ongoing'}.
                     </p>
                   </div>
 

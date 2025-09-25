@@ -103,7 +103,7 @@ function App() {
           <div className="flex flex-col h-screen bg-gray-900">
             <Navbar
               user={user}
-              notifications={data.settings.notifications}
+              notifications={data.settings?.notifications || []}
               onLogout={handleLogoutCallback}
               onClearNotifications={clearAllNotificationsCallback}
               formatNotificationTime={formatNotificationTime}
@@ -125,7 +125,7 @@ function App() {
                       properties={data.properties}
                       loans={data.loans}
                       transactions={data.transactions}
-                      settings={data.settings}
+                      settings={data.settings || { financialYearStart: '07-01', notifications: [] }}
                       onSaveData={handleSaveDataWithNotificationCallback}
                     />
                   } />

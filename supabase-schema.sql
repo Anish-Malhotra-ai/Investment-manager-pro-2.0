@@ -68,15 +68,21 @@ CREATE TABLE IF NOT EXISTS expenses (
 -- Create rentals table
 CREATE TABLE IF NOT EXISTS rentals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    property_id TEXT NOT NULL,
-    tenant_name TEXT NOT NULL,
-    monthly_rent DECIMAL(10,2) NOT NULL,
-    lease_start DATE NOT NULL,
-    lease_end DATE NOT NULL,
-    deposit DECIMAL(10,2),
+    property_id TEXT,
+    tenant_name TEXT,
+    monthly_rent NUMERIC,
+    lease_start DATE,
+    lease_end DATE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    deposit NUMERIC,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    room_description TEXT,
+    frequency VARCHAR DEFAULT 'Weekly',
+    bond_amount NUMERIC DEFAULT 0,
+    notes TEXT,
+    reminder_date DATE,
+    management_fee_percentage NUMERIC
 );
 
 -- Create agents table

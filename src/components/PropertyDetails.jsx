@@ -22,6 +22,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
   const safeProperties = Array.isArray(data.properties) ? data.properties : [];
   const safeLoans = Array.isArray(data.loans) ? data.loans : [];
   const safeTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+  const safeRentals = Array.isArray(data.rentals) ? data.rentals : [];
   const safeSettings = data.settings && typeof data.settings === 'object' ? data.settings : {};
 
   const property = safeProperties.find(p => p && p.id === id);
@@ -121,6 +122,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
           <RentalManager
             property={property}
             properties={safeProperties}
+            rentals={safeRentals}
             onSaveData={handleSaveDataWithNotification}
             loans={safeLoans}
             transactions={safeTransactions}

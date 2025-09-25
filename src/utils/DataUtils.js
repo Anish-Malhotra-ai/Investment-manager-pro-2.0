@@ -61,21 +61,20 @@ export const loadUserData = async (setData) => {
   }
 };
 
-// Save data to Supabase
+// Refresh data from Supabase
 export const handleSaveData = async (newData, setData) => {
   try {
-    setData(newData);
-
-    // Save to Supabase
-    const result = await SupabaseManager.saveAllData(newData);
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to save data to Supabase');
+    // Update local state if newData is provided
+    if (newData) {
+      setData(newData);
     }
+
+    // Refresh data from Supabase to ensure consistency
+    await loadUserData(setData);
 
     return { success: true };
   } catch (error) {
-    console.error('Failed to save data:', error);
+    console.error('Failed to refresh data:', error);
     throw error;
   }
 };
@@ -275,10 +274,10 @@ export const updateRental = async (id, rentalData) => {
     if (!result.success) {
       throw new Error(result.error || 'Failed to update rental');
     }
-    return result.rental;
+    return { success: true, rental: result.rental };
   } catch (error) {
     console.error('Failed to update rental:', error);
-    throw error;
+    return { success: false, error: error.message };
   }
 };
 

@@ -12,8 +12,8 @@ export const addNotification = (setData, message, type = 'info') => {
   setData(prevData => ({
     ...prevData,
     settings: {
-      ...prevData.settings,
-      notifications: [...(prevData.settings.notifications || []), notification]
+      ...(prevData.settings || {}),
+      notifications: [...((prevData.settings?.notifications) || []), notification]
     }
   }));
 
@@ -23,8 +23,8 @@ export const addNotification = (setData, message, type = 'info') => {
       setData(prevData => ({
         ...prevData,
         settings: {
-          ...prevData.settings,
-          notifications: prevData.settings.notifications.filter(n => n.id !== notification.id)
+          ...(prevData.settings || {}),
+          notifications: (prevData.settings?.notifications || []).filter(n => n.id !== notification.id)
         }
       }));
     }, 5000);
@@ -67,7 +67,7 @@ export const getNotificationIcon = (type) => {
 export const clearAllNotifications = async (data, setData, addNotificationCallback) => {
   try {
     const updatedSettings = {
-      ...data.settings,
+      ...(data.settings || {}),
       notifications: []
     };
     
