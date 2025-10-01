@@ -243,8 +243,21 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
           </button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {propertyExpenses.map((expense) => (
+        <div className="space-y-4">
+          {/* Add Expense Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <SafeIcon icon={FiPlus} className="w-4 h-4" />
+              <span>Add Expense</span>
+            </button>
+          </div>
+          
+          {/* Expenses Grid */}
+          <div className="grid gap-4">
+            {propertyExpenses.map((expense) => (
             <motion.div
               key={expense.id}
               initial={{ opacity: 0, y: 20 }}
@@ -329,6 +342,7 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
               </div>
             </motion.div>
           ))}
+          </div>
         </div>
       )}
 

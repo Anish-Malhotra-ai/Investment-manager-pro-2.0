@@ -4,7 +4,7 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import { createAgent, updateAgent, deleteAgent } from '../utils/DataUtils';
 
-const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin } = FiIcons;
+const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin, FiPlus } = FiIcons;
 
 const AgentManager = ({ property, properties, onSaveData, agents, loans, transactions, settings }) => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -155,8 +155,21 @@ const AgentManager = ({ property, properties, onSaveData, agents, loans, transac
           </button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {safeAgents.map((agent) => (
+        <div className="space-y-4">
+          {/* Add Agent Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <SafeIcon icon={FiPlus} className="w-4 h-4" />
+              <span>Add Agent</span>
+            </button>
+          </div>
+          
+          {/* Agents Grid */}
+          <div className="grid gap-4">
+            {safeAgents.map((agent) => (
             <motion.div
               key={agent.id}
               initial={{ opacity: 0, y: 20 }}
@@ -226,6 +239,7 @@ const AgentManager = ({ property, properties, onSaveData, agents, loans, transac
               </div>
             </motion.div>
           ))}
+          </div>
         </div>
       )}
 

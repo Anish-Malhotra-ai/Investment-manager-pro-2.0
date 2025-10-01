@@ -6,7 +6,7 @@ import { parseCurrency, formatForInput } from '../utils/number';
 import { generateRentalTransactions } from '../utils/FinancialCalculations';
 import { createRental, updateRental, deleteRental, createTransaction } from '../utils/DataUtils';
 
-const { FiEdit, FiTrash2, FiX, FiUsers, FiCopy, FiBell, FiEye, FiCheck } = FiIcons;
+const { FiEdit, FiTrash2, FiX, FiUsers, FiCopy, FiBell, FiEye, FiCheck, FiPlus } = FiIcons;
 
 const RentalManager = ({ property, properties, rentals, onSaveData, loans, transactions, settings }) => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -325,8 +325,21 @@ const RentalManager = ({ property, properties, rentals, onSaveData, loans, trans
           </button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {propertyRentals.map((rental) => (
+        <div className="space-y-4">
+          {/* Add Rental Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <SafeIcon icon={FiPlus} className="w-4 h-4" />
+              <span>Add Rental</span>
+            </button>
+          </div>
+          
+          {/* Rentals Grid */}
+          <div className="grid gap-4">
+            {propertyRentals.map((rental) => (
             <motion.div
               key={rental.id}
               initial={{ opacity: 0, y: 20 }}
@@ -441,6 +454,7 @@ const RentalManager = ({ property, properties, rentals, onSaveData, loans, trans
               </div>
             </motion.div>
           ))}
+          </div>
         </div>
       )}
 
