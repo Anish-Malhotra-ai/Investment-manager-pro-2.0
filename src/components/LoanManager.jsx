@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import SafeIcon from '../common/SafeIcon';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
-import { formatCurrency } from '../utils/number';
+import SafeIcon from '../common/SafeIcon';
+import { formatCurrency, parseCurrency, formatForInput } from '../utils/number';
+import { canUserPerformActions } from '../utils/AuthUtils';
 import { createLoan, updateLoan, deleteLoan } from '../utils/DataUtils';
 
-const { FiPlus, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiCreditCard } = FiIcons;
+const { FiEdit, FiTrash2, FiSave, FiX, FiDollarSign, FiPercent, FiCalendar, FiPlus, FiCreditCard, FiChevronRight,FiChevronDown } = FiIcons;
 
-function LoanManager({ data, propertyId, onSaveData }) {
+const LoanManager = ({ user, property, data, propertyId, onSaveData, addNotification }) => {
+  const canPerformActions = canUserPerformActions(user);
   const [showForm, setShowForm] = useState(false);
   const [editingLoan, setEditingLoan] = useState(null);
   const [expandedProperties, setExpandedProperties] = useState(new Set());
@@ -219,20 +222,22 @@ function LoanManager({ data, propertyId, onSaveData }) {
     <div key={loan.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-semibold text-white mb-1">{loan.lender}</h3>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleEdit(loan)}
-            className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <SafeIcon icon={FiEdit2} className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(loan.id)}
-            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <SafeIcon icon={FiTrash2} className="w-4 h-4" />
-          </button>
-        </div>
+        {canPerformActions && (
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleEdit(loan)}
+              className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <SafeIcon icon={FiEdit} className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(loan.id)}
+              className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -268,17 +273,19 @@ function LoanManager({ data, propertyId, onSaveData }) {
             {propertyId ? 'Manage loans for this property' : 'Manage all property loans'}
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <SafeIcon icon={FiPlus} className="w-4 h-4" />
-          <span>Add Loan</span>
-        </button>
+        {canPerformActions && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <SafeIcon icon={FiPlus} className="w-4 h-4" />
+            <span>Add Loan</span>
+          </button>
+        )}
       </div>
 
       {/* Form Modal */}
-      {showForm && (
+      {canPerformActions && showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold text-white mb-4">

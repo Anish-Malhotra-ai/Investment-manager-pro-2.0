@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import DataManager from '../services/DataManager';
+import { canUserPerformActions } from '../utils/AuthUtils';
 
 const { FiSave, FiDownload, FiUpload, FiTrash2, FiAlertTriangle, FiCheck, FiFolder, FiSettings } = FiIcons;
 
-const Settings = ({ settings, properties, loans, transactions, onSaveData }) => {
+const Settings = ({ user, settings, properties, loans, transactions, onSaveData }) => {
+  // Check if user can perform actions (create/edit/delete)
+  const canPerformActions = canUserPerformActions(user);
+  
   const [formData, setFormData] = useState({
     financialYearStart: '07-01',
     currency: 'AUD',
@@ -405,25 +409,36 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
               </div>
             )}
 
-            <div className="space-y-3">
-              <button
-                onClick={testBackupMethod}
-                disabled={loading}
-                className="btn-secondary w-full flex items-center justify-center space-x-2"
-              >
-                <SafeIcon icon={FiSettings} className="w-5 h-5" />
-                <span>{loading ? 'Testing...' : 'Test Backup Method'}</span>
-              </button>
+            {canPerformActions && (
+              <div className="space-y-3">
+                <button
+                  onClick={testBackupMethod}
+                  disabled={loading}
+                  className="btn-secondary w-full flex items-center justify-center space-x-2"
+                >
+                  <SafeIcon icon={FiSettings} className="w-5 h-5" />
+                  <span>{loading ? 'Testing...' : 'Test Backup Method'}</span>
+                </button>
 
-              <button
-                onClick={handleExportData}
-                disabled={loading}
-                className="btn-primary w-full flex items-center justify-center space-x-2"
-              >
-                <SafeIcon icon={FiDownload} className="w-5 h-5" />
-                <span>{loading ? 'Exporting...' : 'Create Backup Now'}</span>
-              </button>
-            </div>
+                <button
+                  onClick={handleExportData}
+                  disabled={loading}
+                  className="btn-primary w-full flex items-center justify-center space-x-2"
+                >
+                  <SafeIcon icon={FiDownload} className="w-5 h-5" />
+                  <span>{loading ? 'Exporting...' : 'Create Backup Now'}</span>
+                </button>
+              </div>
+            )}
+            
+            {!canPerformActions && (
+              <div className="bg-yellow-900/20 border border-yellow-700 rounded p-3">
+                <p className="text-yellow-400 text-sm flex items-center">
+                  <SafeIcon icon={FiAlertTriangle} className="w-4 h-4 mr-2" />
+                  Backup features are only available to active users.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -461,37 +476,50 @@ const Settings = ({ settings, properties, loans, transactions, onSaveData }) => 
           </div>
 
           {/* Export/Import */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportData}
-                className="hidden"
-                id="import-file"
-              />
-              <label
-                htmlFor="import-file"
-                className="btn-secondary w-full flex items-center justify-center space-x-2 cursor-pointer"
-              >
-                <SafeIcon icon={FiUpload} className="w-5 h-5" />
-                <span>Import Data</span>
-              </label>
+          {canPerformActions && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
+                  id="import-file"
+                />
+                <label
+                  htmlFor="import-file"
+                  className="btn-secondary w-full flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <SafeIcon icon={FiUpload} className="w-5 h-5" />
+                  <span>Import Data</span>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Development Tools */}
-          <div className="pt-4 border-t border-gray-700">
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Danger Zone</h3>
-            <button
-              onClick={handleResetData}
-              disabled={loading}
-              className="btn-danger w-full flex items-center justify-center space-x-2"
-            >
-              <SafeIcon icon={FiTrash2} className="w-5 h-5" />
-              <span>Reset All Data</span>
-            </button>
-          </div>
+          {canPerformActions && (
+            <div className="pt-4 border-t border-gray-700">
+              <h3 className="text-sm font-medium text-gray-300 mb-3">Danger Zone</h3>
+              <button
+                onClick={handleResetData}
+                disabled={loading}
+                className="btn-danger w-full flex items-center justify-center space-x-2"
+              >
+                <SafeIcon icon={FiTrash2} className="w-5 h-5" />
+                <span>Reset All Data</span>
+              </button>
+            </div>
+          )}
+          
+          {!canPerformActions && (
+            <div className="bg-yellow-900/20 border border-yellow-700 rounded p-3">
+              <p className="text-yellow-400 text-sm flex items-center">
+                <SafeIcon icon={FiAlertTriangle} className="w-4 h-4 mr-2" />
+                Data management features are only available to active users.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

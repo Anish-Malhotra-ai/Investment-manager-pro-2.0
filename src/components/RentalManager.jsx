@@ -5,10 +5,13 @@ import SafeIcon from '../common/SafeIcon';
 import { parseCurrency, formatForInput } from '../utils/number';
 import { generateRentalTransactions } from '../utils/FinancialCalculations';
 import { createRental, updateRental, deleteRental, createTransaction } from '../utils/DataUtils';
+import { canUserPerformActions } from '../utils/AuthUtils';
 
 const { FiEdit, FiTrash2, FiX, FiUsers, FiCopy, FiBell, FiEye, FiCheck, FiPlus } = FiIcons;
 
-const RentalManager = ({ property, properties, rentals, onSaveData, loans, transactions, settings }) => {
+const RentalManager = ({ user, property, properties, rentals, onSaveData, loans, transactions, settings }) => {
+  const canPerformActions = canUserPerformActions(user);
+  
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRental, setEditingRental] = useState(null);
   const [showSchedulePreview, setShowSchedulePreview] = useState(false);
@@ -316,26 +319,35 @@ const RentalManager = ({ property, properties, rentals, onSaveData, loans, trans
         <div className="card text-center py-12">
           <SafeIcon icon={FiUsers} className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Rentals Added</h3>
-          <p className="text-gray-500 mb-6">Start by adding rental details for this property</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary"
-          >
-            Add Your First Rental
-          </button>
+          <p className="text-gray-500 mb-6">
+            {canPerformActions 
+              ? "Start by adding rental details for this property" 
+              : "No rental details available for this property"
+            }
+          </p>
+          {canPerformActions && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary"
+            >
+              Add Your First Rental
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
           {/* Add Rental Button */}
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <SafeIcon icon={FiPlus} className="w-4 h-4" />
-              <span>Add Rental</span>
-            </button>
-          </div>
+          {canPerformActions && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <SafeIcon icon={FiPlus} className="w-4 h-4" />
+                <span>Add Rental</span>
+              </button>
+            </div>
+          )}
           
           {/* Rentals Grid */}
           <div className="grid gap-4">
@@ -430,27 +442,29 @@ const RentalManager = ({ property, properties, rentals, onSaveData, loans, trans
                   )}
                 </div>
 
-                <div className="flex space-x-2 ml-4">
-                  <button
-                    onClick={() => handleAddSimilar(rental)}
-                    className="text-gray-400 hover:text-green-400 transition-colors"
-                    title="Add Similar"
-                  >
-                    <SafeIcon icon={FiCopy} className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(rental)}
-                    className="text-gray-400 hover:text-blue-400 transition-colors"
-                  >
-                    <SafeIcon icon={FiEdit} className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(rental.id)}
-                    className="text-gray-400 hover:text-red-400 transition-colors"
-                  >
-                    <SafeIcon icon={FiTrash2} className="w-4 h-4" />
-                  </button>
-                </div>
+                {canPerformActions && (
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => handleAddSimilar(rental)}
+                      className="text-gray-400 hover:text-green-400 transition-colors"
+                      title="Add Similar"
+                    >
+                      <SafeIcon icon={FiCopy} className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(rental)}
+                      className="text-gray-400 hover:text-blue-400 transition-colors"
+                    >
+                      <SafeIcon icon={FiEdit} className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rental.id)}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -460,7 +474,7 @@ const RentalManager = ({ property, properties, rentals, onSaveData, loans, trans
 
       {/* Add/Edit Form */}
       <AnimatePresence>
-        {showAddForm && (
+        {showAddForm && canPerformActions && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

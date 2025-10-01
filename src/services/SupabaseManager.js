@@ -107,6 +107,80 @@ class SupabaseManager {
     return this.currentUser;
   }
 
+  // User Profile Management
+  static async createUserProfile(userId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('user_profiles')
+        .insert([{
+          user_id: userId,
+          is_active: true
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { success: true, profile: data };
+    } catch (error) {
+      console.error('Failed to create user profile:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async getUserProfile(userId = null) {
+    try {
+      const targetUserId = userId || this.currentUser?.id;
+      if (!targetUserId) {
+        return { success: false, error: 'No user ID provided' };
+      }
+
+      const { data, error } = await this.supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .single();
+
+      if (error) {
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          return await this.createUserProfile(targetUserId);
+        }
+        throw error;
+      }
+
+      return { success: true, profile: data };
+    } catch (error) {
+      console.error('Failed to get user profile:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async updateUserProfile(userId, profileData) {
+    try {
+      const { data, error } = await this.supabase
+        .from('user_profiles')
+        .update(profileData)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { success: true, profile: data };
+    } catch (error) {
+      console.error('Failed to update user profile:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async setUserActiveStatus(userId, isActive) {
+    try {
+      return await this.updateUserProfile(userId, { is_active: isActive });
+    } catch (error) {
+      console.error('Failed to set user active status:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Property Management
   static async createProperty(propertyData) {
     try {

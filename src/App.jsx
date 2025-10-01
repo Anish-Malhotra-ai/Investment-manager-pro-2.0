@@ -10,6 +10,7 @@ import Settings from './components/Settings';
 import WelcomeSplash from './components/WelcomeSplash';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
+import InactiveUserBanner from './components/InactiveUserBanner';
 import SupabaseManager from './services/SupabaseManager';
 import {
   addNotification,
@@ -49,7 +50,29 @@ function App() {
 
         if (SupabaseManager.isAuthenticated()) {
           const currentUser = SupabaseManager.getCurrentUser();
-          setUser(currentUser);
+          
+          // Fetch user profile data
+          const profileResult = await SupabaseManager.getUserProfile(currentUser.id);
+          
+          if (profileResult.success) {
+            // Add profile data to user object
+            const userWithProfile = {
+              ...currentUser,
+              profile: profileResult.profile,
+              isActive: profileResult.profile.is_active
+            };
+            setUser(userWithProfile);
+          } else {
+            // If profile fetch fails, still set user but mark as inactive for safety
+            const userWithProfile = {
+              ...currentUser,
+              profile: null,
+              isActive: false
+            };
+            setUser(userWithProfile);
+            console.warn('Failed to load user profile:', profileResult.error);
+          }
+          
           await loadUserData(setData);
         }
       } catch (error) {
@@ -101,6 +124,7 @@ function App() {
       <Router>
         <ProtectedRoute user={user} onLogin={handleLoginCallback}>
           <div className="flex flex-col h-screen bg-gray-900">
+            <InactiveUserBanner user={user} />
             <Navbar
               user={user}
               notifications={data.settings?.notifications || []}
@@ -122,6 +146,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={
                     <Dashboard
+                      user={user}
                       properties={data.properties}
                       loans={data.loans}
                       transactions={data.transactions}
@@ -131,6 +156,7 @@ function App() {
                   } />
                   <Route path="/property/:id" element={
                     <PropertyDetails
+                      user={user}
                       data={data}
                       setData={setData}
                       onSaveData={handleSaveDataWithNotificationCallback}
@@ -138,25 +164,31 @@ function App() {
                     />
                   } />
                   <Route path="/loans" element={
-                    <LoanManager 
-                      data={data} 
+                    <LoanManager
+                      user={user}
+                      data={{
+                        loans: data.loans,
+                        properties: data.properties,
+                        transactions: data.transactions,
+                        settings: data.settings
+                      }}
                       onSaveData={handleSaveDataWithNotificationCallback}
+                      addNotification={addNotification}
                     />
                   } />
                   <Route path="/transactions" element={
                     <TransactionTable
-                      data={data}
-                      setData={setData}
+                      user={user}
+                      transactions={data.transactions}
+                      properties={data.properties}
                       onSaveData={handleSaveDataWithNotificationCallback}
-                      addNotification={addNotificationCallback}
                     />
                   } />
                   <Route path="/settings" element={
                     <Settings
-                      data={data}
-                      setData={setData}
+                      user={user}
+                      settings={data.settings || { financialYearStart: '07-01', notifications: [] }}
                       onSaveData={handleSaveDataWithNotificationCallback}
-                      addNotification={addNotificationCallback}
                     />
                   } />
                   <Route path="*" element={<Navigate to="/" replace />} />

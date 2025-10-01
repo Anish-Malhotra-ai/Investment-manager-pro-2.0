@@ -7,15 +7,19 @@ import PropertyCard from './PropertyCard';
 import AddPropertyModal from './AddPropertyModal';
 import { calculatePortfolioMetrics } from '../utils/FinancialCalculations';
 import { formatCurrency, sanitize, formatCurrencyForChart } from '../utils/number';
+import { canUserPerformActions } from '../utils/AuthUtils';
 import DataManager from '../services/DataManager';
 import html2canvas from 'html2canvas';
 
 const { FiPlus, FiCamera, FiSave, FiBarChart3, FiDownload, FiPieChart, FiBell, FiClock } = FiIcons;
 
-const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) => {
+const Dashboard = ({ user, properties, loans, transactions, settings, onSaveData }) => {
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Check if user can perform actions (create/edit/delete)
+  const canPerformActions = canUserPerformActions(user);
 
   // FIXED: Ensure all props are safe arrays to prevent crashes
   const safeProperties = Array.isArray(properties) ? properties : [];
@@ -511,31 +515,37 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            <button
-              onClick={handleScreenshot}
-              className="btn-secondary flex items-center space-x-2 text-sm"
-              title="Take screenshot"
-            >
-              <SafeIcon icon={FiCamera} className="w-4 h-4" />
-              <span className="hidden sm:inline">Screenshot</span>
-            </button>
+            {canPerformActions && (
+              <button
+                onClick={handleScreenshot}
+                className="btn-secondary flex items-center space-x-2 text-sm"
+                title="Take screenshot"
+              >
+                <SafeIcon icon={FiCamera} className="w-4 h-4" />
+                <span className="hidden sm:inline">Screenshot</span>
+              </button>
+            )}
 
-            <button
-              onClick={handleManualBackup}
-              className="btn-secondary flex items-center space-x-2 text-sm"
-              title="Manual backup"
-            >
-              <SafeIcon icon={FiSave} className="w-4 h-4" />
-              <span className="hidden sm:inline">Backup</span>
-            </button>
+            {canPerformActions && (
+              <button
+                onClick={handleManualBackup}
+                className="btn-secondary flex items-center space-x-2 text-sm"
+                title="Manual backup"
+              >
+                <SafeIcon icon={FiSave} className="w-4 h-4" />
+                <span className="hidden sm:inline">Backup</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <SafeIcon icon={FiPlus} className="w-5 h-5" />
-              <span>Add Property</span>
-            </button>
+            {canPerformActions && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <SafeIcon icon={FiPlus} className="w-5 h-5" />
+                <span>Add Property</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -602,13 +612,20 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
             <SafeIcon icon={FiPlus} className="w-8 h-8 text-purple-400" />
           </div>
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Properties Added</h3>
-          <p className="text-gray-500 mb-6">Start building your investment portfolio by adding your first property</p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="btn-primary"
-          >
-            Add Your First Property
-          </button>
+          <p className="text-gray-500 mb-6">
+            {canPerformActions 
+              ? "Start building your investment portfolio by adding your first property"
+              : "No properties available to view"
+            }
+          </p>
+          {canPerformActions && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="btn-primary"
+            >
+              Add Your First Property
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -618,6 +635,7 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
             return (
               <PropertyCard
                 key={property.id}
+                user={user}
                 property={property}
                 loans={safeLoans}
                 transactions={safeTransactions}
@@ -629,11 +647,13 @@ const Dashboard = ({ properties, loans, transactions, settings, onSaveData }) =>
       )}
 
       {/* Add Property Modal */}
-      <AddPropertyModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSave={handleAddProperty}
-      />
+      {canPerformActions && (
+        <AddPropertyModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddProperty}
+        />
+      )}
     </div>
   );
 };

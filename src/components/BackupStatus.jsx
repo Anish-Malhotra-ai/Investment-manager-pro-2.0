@@ -4,10 +4,14 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import DataManager from '../services/DataManager';
 import { formatCurrency } from '../utils/number';
+import { canUserPerformActions } from '../utils/AuthUtils';
 
-const { FiSave, FiClock, FiCheck, FiDownload, FiUpload, FiMove } = FiIcons;
+const { FiSave, FiClock, FiCheck, FiDownload, FiUpload, FiMove, FiAlertTriangle } = FiIcons;
 
-const BackupStatus = () => {
+const BackupStatus = ({ user }) => {
+  // Check if user can perform actions (create/edit/delete)
+  const canPerformActions = canUserPerformActions(user);
+  
   const [lastBackup, setLastBackup] = useState(null);
   const [nextBackup, setNextBackup] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
@@ -263,24 +267,35 @@ const BackupStatus = () => {
         </div>
       </div>
 
-      <div className="flex items-center space-x-2 pt-2 border-t border-gray-700">
-        <button
-          onClick={handleManualBackup}
-          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-1 px-2 rounded flex items-center justify-center space-x-1"
-          aria-label="Create manual backup (Ctrl+S)"
-        >
-          <SafeIcon icon={FiDownload} className="w-3 h-3" />
-          <span>Save</span>
-        </button>
-        <button
-          onClick={handleImportBackup}
-          className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-xs py-1 px-2 rounded flex items-center justify-center space-x-1"
-          aria-label="Import backup"
-        >
-          <SafeIcon icon={FiUpload} className="w-3 h-3" />
-          <span>Load</span>
-        </button>
-      </div>
+      {canPerformActions ? (
+        <div className="flex items-center space-x-2 pt-2 border-t border-gray-700">
+          <button
+            onClick={handleManualBackup}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-1 px-2 rounded flex items-center justify-center space-x-1"
+            aria-label="Create manual backup (Ctrl+S)"
+          >
+            <SafeIcon icon={FiDownload} className="w-3 h-3" />
+            <span>Save</span>
+          </button>
+          <button
+            onClick={handleImportBackup}
+            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-xs py-1 px-2 rounded flex items-center justify-center space-x-1"
+            aria-label="Import backup"
+          >
+            <SafeIcon icon={FiUpload} className="w-3 h-3" />
+            <span>Load</span>
+          </button>
+        </div>
+      ) : (
+        <div className="pt-2 border-t border-gray-700">
+          <div className="bg-yellow-900/20 border border-yellow-700 rounded p-2">
+            <p className="text-yellow-400 text-xs flex items-center">
+              <SafeIcon icon={FiAlertTriangle} className="w-3 h-3 mr-1" />
+              Backup features require active user status
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-2 pt-1 border-t border-gray-700">
         <p className="text-xs text-yellow-400">

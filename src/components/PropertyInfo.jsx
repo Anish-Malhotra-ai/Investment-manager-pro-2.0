@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import { parseCurrency, formatForInput } from '../utils/number';
+import { canUserPerformActions } from '../utils/AuthUtils';
 
 const { FiEdit, FiSave, FiX, FiHome, FiCalendar, FiDollarSign, FiFileText, FiPlus, FiTrash2 } = FiIcons;
 
-const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, settings }) => {
+const PropertyInfo = ({ user, property, properties, onSaveData, loans, transactions, settings }) => {
+  const canPerformActions = canUserPerformActions(user);
   const [isEditing, setIsEditing] = useState(false);
 
   // Initialize form data with acquisition costs
@@ -189,34 +191,36 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
             <SafeIcon icon={FiHome} className="w-5 h-5 mr-2" />
             Property Information
           </h3>
-          <div className="flex items-center space-x-2">
-            {!isEditing ? (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="btn-secondary flex items-center space-x-2"
-              >
-                <SafeIcon icon={FiEdit} className="w-4 h-4" />
-                <span>Edit</span>
-              </button>
-            ) : (
-              <div className="flex space-x-2">
+          {canPerformActions && (
+            <div className="flex items-center space-x-2">
+              {!isEditing ? (
                 <button
-                  onClick={handleSave}
-                  className="btn-primary flex items-center space-x-2"
-                >
-                  <SafeIcon icon={FiSave} className="w-4 h-4" />
-                  <span>Save</span>
-                </button>
-                <button
-                  onClick={handleCancel}
+                  onClick={() => setIsEditing(true)}
                   className="btn-secondary flex items-center space-x-2"
                 >
-                  <SafeIcon icon={FiX} className="w-4 h-4" />
-                  <span>Cancel</span>
+                  <SafeIcon icon={FiEdit} className="w-4 h-4" />
+                  <span>Edit</span>
                 </button>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleSave}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <SafeIcon icon={FiSave} className="w-4 h-4" />
+                    <span>Save</span>
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="btn-secondary flex items-center space-x-2"
+                  >
+                    <SafeIcon icon={FiX} className="w-4 h-4" />
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {isEditing ? (
@@ -330,14 +334,16 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
                   <SafeIcon icon={FiFileText} className="w-4 h-4 mr-2" />
                   Acquisition Costs
                 </h4>
-                <button
-                  type="button"
-                  onClick={addAcquisitionCost}
-                  className="btn-secondary flex items-center space-x-2"
-                >
-                  <SafeIcon icon={FiPlus} className="w-4 h-4" />
-                  <span>Add Cost</span>
-                </button>
+                {canPerformActions && (
+                  <button
+                    type="button"
+                    onClick={addAcquisitionCost}
+                    className="btn-secondary flex items-center space-x-2"
+                  >
+                    <SafeIcon icon={FiPlus} className="w-4 h-4" />
+                    <span>Add Cost</span>
+                  </button>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -391,14 +397,16 @@ const PropertyInfo = ({ property, properties, onSaveData, loans, transactions, s
                     </div>
 
                     <div className="flex items-end">
-                      <button
-                        type="button"
-                        onClick={() => removeAcquisitionCost(index)}
-                        className="btn-danger w-full flex items-center justify-center space-x-2"
-                      >
-                        <SafeIcon icon={FiTrash2} className="w-4 h-4" />
-                        <span>Remove</span>
-                      </button>
+                      {canPerformActions && (
+                        <button
+                          type="button"
+                          onClick={() => removeAcquisitionCost(index)}
+                          className="btn-danger w-full flex items-center justify-center space-x-2"
+                        >
+                          <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                          <span>Remove</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

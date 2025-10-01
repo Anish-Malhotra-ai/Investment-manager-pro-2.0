@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import { parseCurrency, formatForInput } from '../utils/number';
+import { canUserPerformActions } from '../utils/AuthUtils';
 import { createExpense, updateExpense, deleteExpense, createTransaction } from '../utils/DataUtils';
 
 const { FiPlus, FiEdit, FiTrash2, FiSave, FiX, FiReceipt, FiDollarSign, FiCalendar, FiTag, FiCopy } = FiIcons;
@@ -20,9 +21,12 @@ const __makeTx = ({ propertyId, amount, date=new Date(), category="", descriptio
   ...meta,
 });
 
-const ExpenseManager = ({ property, properties, onSaveData, loans, transactions, settings, expenses = [] }) => {
+const ExpenseManager = ({ user, property, properties, onSaveData, loans, transactions, settings, expenses = [] }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  
+  // Check if user can perform actions (create/edit/delete)
+  const canPerformActions = canUserPerformActions(user);
   const [formData, setFormData] = useState({
     category: 'Maintenance',
     amount: '',
@@ -234,26 +238,35 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
         <div className="card text-center py-12">
           <SafeIcon icon={FiReceipt} className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Expenses Added</h3>
-          <p className="text-gray-500 mb-6">Start by adding expense details for this property</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary"
-          >
-            Add Your First Expense
-          </button>
+          <p className="text-gray-500 mb-6">
+            {canPerformActions 
+              ? "Start by adding expense details for this property"
+              : "No expenses available to view"
+            }
+          </p>
+          {canPerformActions && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary"
+            >
+              Add Your First Expense
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
           {/* Add Expense Button */}
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <SafeIcon icon={FiPlus} className="w-4 h-4" />
-              <span>Add Expense</span>
-            </button>
-          </div>
+          {canPerformActions && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <SafeIcon icon={FiPlus} className="w-4 h-4" />
+                <span>Add Expense</span>
+              </button>
+            </div>
+          )}
           
           {/* Expenses Grid */}
           <div className="grid gap-4">
@@ -316,29 +329,31 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
                   )}
                 </div>
 
-                <div className="flex space-x-2 ml-4">
-                  <button
-                    onClick={() => handleAddSimilar(expense)}
-                    className="text-gray-400 hover:text-green-400 transition-colors"
-                    title="Add Similar Expense"
-                  >
-                    <SafeIcon icon={FiCopy} className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(expense)}
-                    className="text-gray-400 hover:text-blue-400 transition-colors"
-                    title="Edit Expense"
-                  >
-                    <SafeIcon icon={FiEdit} className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(expense.id)}
-                    className="text-gray-400 hover:text-red-400 transition-colors"
-                    title="Delete Expense"
-                  >
-                    <SafeIcon icon={FiTrash2} className="w-4 h-4" />
-                  </button>
-                </div>
+                {canPerformActions && (
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => handleAddSimilar(expense)}
+                      className="text-gray-400 hover:text-green-400 transition-colors"
+                      title="Add Similar Expense"
+                    >
+                      <SafeIcon icon={FiCopy} className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(expense)}
+                      className="text-gray-400 hover:text-blue-400 transition-colors"
+                      title="Edit Expense"
+                    >
+                      <SafeIcon icon={FiEdit} className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(expense.id)}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                      title="Delete Expense"
+                    >
+                      <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -348,7 +363,7 @@ const ExpenseManager = ({ property, properties, onSaveData, loans, transactions,
 
       {/* Add/Edit Form */}
       <AnimatePresence>
-        {showAddForm && (
+        {canPerformActions && showAddForm && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

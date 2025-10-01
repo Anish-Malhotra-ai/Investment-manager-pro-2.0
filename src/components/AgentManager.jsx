@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
+import { canUserPerformActions } from '../utils/AuthUtils';
 import { createAgent, updateAgent, deleteAgent } from '../utils/DataUtils';
 
 const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin, FiPlus } = FiIcons;
 
-const AgentManager = ({ property, properties, onSaveData, agents, loans, transactions, settings }) => {
+const AgentManager = ({ user, property, agents, onSaveData, addNotification }) => {
+  const canPerformActions = canUserPerformActions(user);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [formData, setFormData] = useState({
@@ -146,26 +148,35 @@ const AgentManager = ({ property, properties, onSaveData, agents, loans, transac
         <div className="card text-center py-12">
           <SafeIcon icon={FiUser} className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-400 mb-2">No Agents Added</h3>
-          <p className="text-gray-500 mb-6">Start by adding agent details for this property</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary"
-          >
-            Add Your First Agent
-          </button>
+          <p className="text-gray-500 mb-6">
+            {canPerformActions 
+              ? "Start by adding agent details for this property" 
+              : "Agent details will appear here when added by an active user"
+            }
+          </p>
+          {canPerformActions && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary"
+            >
+              Add Your First Agent
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
           {/* Add Agent Button */}
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <SafeIcon icon={FiPlus} className="w-4 h-4" />
-              <span>Add Agent</span>
-            </button>
-          </div>
+          {canPerformActions && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <SafeIcon icon={FiPlus} className="w-4 h-4" />
+                <span>Add Agent</span>
+              </button>
+            </div>
+          )}
           
           {/* Agents Grid */}
           <div className="grid gap-4">
@@ -222,20 +233,22 @@ const AgentManager = ({ property, properties, onSaveData, agents, loans, transac
                   </div>
                 </div>
 
-                <div className="flex space-x-2 ml-4">
-                  <button
-                    onClick={() => handleEdit(agent)}
-                    className="text-gray-400 hover:text-blue-400 transition-colors"
-                  >
-                    <SafeIcon icon={FiEdit} className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(agent.id)}
-                    className="text-gray-400 hover:text-red-400 transition-colors"
-                  >
-                    <SafeIcon icon={FiTrash2} className="w-4 h-4" />
-                  </button>
-                </div>
+                {canPerformActions && (
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => handleEdit(agent)}
+                      className="text-gray-400 hover:text-blue-400 transition-colors"
+                    >
+                      <SafeIcon icon={FiEdit} className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(agent.id)}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -245,7 +258,7 @@ const AgentManager = ({ property, properties, onSaveData, agents, loans, transac
 
       {/* Add/Edit Form */}
       <AnimatePresence>
-        {showAddForm && (
+        {canPerformActions && showAddForm && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

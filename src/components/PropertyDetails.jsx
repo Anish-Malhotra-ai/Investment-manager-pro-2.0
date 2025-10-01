@@ -13,7 +13,7 @@ import { formatCurrency } from '../utils/number';
 
 const { FiArrowLeft, FiHome, FiDollarSign, FiCreditCard, FiTrendingDown, FiUsers, FiList } = FiIcons;
 
-function PropertyDetails({ data, onSaveData, addNotification }) {
+function PropertyDetails({ user, data, onSaveData, addNotification }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -112,6 +112,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && (
           <PropertyInfo
+            user={user}
             property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
@@ -122,6 +123,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
 
         {activeTab === 'rentals' && (
           <RentalManager
+            user={user}
             property={property}
             properties={safeProperties}
             rentals={safeRentals}
@@ -135,6 +137,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
 
         {activeTab === 'expenses' && (
           <ExpenseManager
+            user={user}
             property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
@@ -148,6 +151,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
 
         {activeTab === 'loans' && (
           <LoanManager
+            user={user}
             data={{
               loans: safeLoans,
               properties: safeProperties,
@@ -161,6 +165,7 @@ function PropertyDetails({ data, onSaveData, addNotification }) {
 
         {activeTab === 'agents' && (
           <AgentManager
+            user={user}
             property={property}
             properties={safeProperties}
             onSaveData={handleSaveDataWithNotification}
