@@ -5,7 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 import { canUserPerformActions } from '../utils/AuthUtils';
 import { createAgent, updateAgent, deleteAgent } from '../utils/DataUtils';
 
-const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin, FiPlus } = FiIcons;
+const { FiEdit, FiTrash2, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin, FiPlus, FiFileText } = FiIcons;
 
 const AgentManager = ({ user, property, agents, onSaveData, addNotification }) => {
   const canPerformActions = canUserPerformActions(user);
@@ -16,7 +16,8 @@ const AgentManager = ({ user, property, agents, onSaveData, addNotification }) =
     email: '',
     phone: '',
     company: '',
-    specialization: ''
+    specialization: '',
+    notes: ''
   });
   const [errors, setErrors] = useState({});
 
@@ -36,7 +37,8 @@ const AgentManager = ({ user, property, agents, onSaveData, addNotification }) =
       email: '',
       phone: '',
       company: '',
-      specialization: ''
+      specialization: '',
+      notes: ''
     });
     setErrors({});
   };
@@ -231,6 +233,18 @@ const AgentManager = ({ user, property, agents, onSaveData, addNotification }) =
                       </div>
                     )}
                   </div>
+
+                  {agent.notes && (
+                    <div className="mt-4 pt-4 border-t border-gray-700">
+                      <div className="flex items-start space-x-2">
+                        <SafeIcon icon={FiFileText} className="w-4 h-4 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-gray-400 text-xs font-medium mb-1">Notes</p>
+                          <p className="text-gray-300 text-sm">{agent.notes}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {canPerformActions && (
@@ -353,6 +367,20 @@ const AgentManager = ({ user, property, agents, onSaveData, addNotification }) =
                     />
                   </div>
 
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    className="form-input"
+                    rows="3"
+                    placeholder="Additional notes about this agent..."
+                  />
                 </div>
 
                 <div className="flex space-x-3 pt-4">
