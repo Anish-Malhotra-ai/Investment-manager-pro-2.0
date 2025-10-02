@@ -243,7 +243,8 @@ const TransactionTable = ({ transactions, propertyId, settings, properties, onSa
       if (filters.propertyId && filters.propertyId !== 'all') {
         filtered = filtered.filter(t => {
           try {
-            return t && t.propertyId === filters.propertyId;
+            // Handle both property_id (snake_case) and propertyId (camelCase) field naming conventions
+            return t && (t.propertyId === filters.propertyId || t.property_id === filters.propertyId);
           } catch (error) {
             console.warn('Error filtering by property:', error);
             return false;
@@ -383,7 +384,7 @@ const TransactionTable = ({ transactions, propertyId, settings, properties, onSa
           
           // Filter by property if specified
           const filteredLoanTransactions = filters.propertyId && filters.propertyId !== 'all'
-            ? loanTransactions.filter(t => t.propertyId === filters.propertyId)
+            ? loanTransactions.filter(t => t.propertyId === filters.propertyId || t.property_id === filters.propertyId)
             : loanTransactions;
             
           syntheticTransactions.push(...filteredLoanTransactions);

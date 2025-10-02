@@ -176,7 +176,7 @@ function PropertyDetails({ user, data, onSaveData, addNotification }) {
 
         {activeTab === 'transactions' && (
           <TransactionTable
-            transactions={safeTransactions.filter(t => t && t.propertyId === property.id)}
+            transactions={safeTransactions.filter(t => t && (t.propertyId === property.id || t.property_id === property.id))}
             propertyId={property.id}
             properties={safeProperties}
             loans={safeLoans}
