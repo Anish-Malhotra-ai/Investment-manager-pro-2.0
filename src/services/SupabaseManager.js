@@ -54,7 +54,24 @@ class SupabaseManager {
 
       if (error) throw error;
 
-      return { success: true, user: data.user };
+      // If email confirmation is enabled, signUp may not return a session yet.
+      // Only attempt client-side profile creation when we have an authenticated session.
+      let profile = null;
+      try {
+        const hasSession = !!data?.session?.user?.id;
+        if (data?.user?.id && hasSession) {
+          const profileResult = await this.createUserProfile(data.user.id);
+          if (profileResult.success) {
+            profile = profileResult.profile;
+          } else {
+            console.warn('Profile creation after registration failed:', profileResult.error);
+          }
+        }
+      } catch (profileErr) {
+        console.warn('Profile creation error:', profileErr);
+      }
+
+      return { success: true, user: data.user, profile };
     } catch (error) {
       console.error('Registration failed:', error);
       return { success: false, error: error.message };
@@ -114,7 +131,8 @@ class SupabaseManager {
         .from('user_profiles')
         .insert([{
           user_id: userId,
-          is_active: true
+          is_active: true,
+          plan: 'free'
         }])
         .select()
         .single();

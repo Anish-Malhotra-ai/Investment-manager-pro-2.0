@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free','monthly','yearly','lifetime')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

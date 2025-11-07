@@ -3,13 +3,16 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import DataManager from '../services/DataManager';
-import { canUserPerformActions } from '../utils/AuthUtils';
+import StripeManager from '../services/StripeManager';
+import { canUserPerformActions, getUserPlan, getTrialDaysLeft } from '../utils/AuthUtils';
 
 const { FiSave, FiDownload, FiUpload, FiTrash2, FiAlertTriangle, FiCheck, FiFolder, FiSettings } = FiIcons;
 
 const Settings = ({ user, settings, properties, loans, transactions, onSaveData }) => {
   // Check if user can perform actions (create/edit/delete)
   const canPerformActions = canUserPerformActions(user);
+  const userPlan = getUserPlan(user);
+  const trialDaysLeft = getTrialDaysLeft(user);
   
   const [formData, setFormData] = useState({
     financialYearStart: '07-01',
@@ -210,6 +213,56 @@ const Settings = ({ user, settings, properties, loans, transactions, onSaveData 
       <div>
         <h1 className="text-3xl font-bold text-white">Settings</h1>
         <p className="text-gray-400 mt-1">Configure your application preferences and manage data</p>
+      </div>
+
+      {/* Plan Information */}
+      <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
+        <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
+          <SafeIcon icon={FiSettings} className="w-5 h-5 mr-2 text-indigo-400" />
+          Account Plan
+        </h3>
+        <div className="text-sm text-gray-300">
+          <div className="flex items-center justify-between">
+            <span>Current Plan</span>
+            <span className="font-medium text-white capitalize">{userPlan}</span>
+          </div>
+          {userPlan === 'free' && (
+            <div className="flex items-center justify-between mt-2">
+              <span>Free Trial</span>
+              <span className="text-blue-300">{typeof trialDaysLeft === 'number' ? `${trialDaysLeft} day(s) left` : 'N/A'}</span>
+            </div>
+          )}
+        </div>
+        {/* Purchase Plans */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[{ label: 'Monthly', key: 'monthly', productId: 'prod_TKxXRKi02WpYrV', desc: 'Pay monthly' },
+            { label: 'Annual', key: 'yearly', productId: 'prod_TKxbg6sZOnAH6V', desc: 'Best value annually' },
+            { label: 'Lifetime', key: 'lifetime', productId: 'prod_TKxd2zJsqX3Nzk', desc: 'One-time lifetime access' }].map(planOpt => (
+            <div key={planOpt.key} className="bg-gray-800/60 rounded-md p-3 border border-gray-700">
+              <div className="text-white font-medium">{planOpt.label}</div>
+              <div className="text-xs text-gray-400 mt-1">{planOpt.desc}</div>
+              <button
+                className="mt-3 px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 rounded-md text-white disabled:opacity-50"
+                disabled={!user}
+                onClick={async () => {
+                  if (!user) return alert('Please log in first');
+                  const result = await StripeManager.createCheckoutSession({
+                    plan: planOpt.key,
+                    productId: planOpt.productId,
+                    userId: user?.id || user?.user?.id,
+                  });
+                  if (result.success && result.url) {
+                    window.location.href = result.url;
+                  } else {
+                    alert(`Failed to start checkout: ${result.error || 'Unknown error'}`);
+                  }
+                }}
+              >
+                {userPlan === planOpt.key ? 'Current Plan' : `Choose ${planOpt.label}`}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

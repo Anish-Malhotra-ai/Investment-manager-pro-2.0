@@ -2,17 +2,21 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
-import { canUserPerformActions } from '../utils/AuthUtils';
+import { getUserPlan, getTrialDaysLeft, isAccessRestricted } from '../utils/AuthUtils';
 
-const { FiAlertTriangle, FiUser, FiLock } = FiIcons;
+const { FiAlertTriangle, FiLock } = FiIcons;
 
 const InactiveUserBanner = ({ user }) => {
-  // Don't show banner if user can perform actions (is active) or not logged in
-  if (canUserPerformActions(user)) {
-    return null;
-  }
+  const plan = getUserPlan(user);
+  const restricted = isAccessRestricted(user);
+  const daysLeft = getTrialDaysLeft(user);
 
-  return (
+  // No banner for paid plans
+  if (!user || (plan !== 'free' && !restricted)) return null;
+
+  // Restricted banner after free trial ends
+  if (restricted) {
+    return (
     <motion.div
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -30,7 +34,35 @@ const InactiveUserBanner = ({ user }) => {
                 Account Activation Required
               </p>
               <p className="text-xs text-yellow-200 mt-1">
-                Your account is currently inactive. Activate your account to access all features.
+                Your free trial has ended. Upgrade to continue using all features.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+    );
+  }
+
+  // Free trial banner with days left
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gradient-to-r from-blue-600 to-indigo-600 border-b border-blue-500 shadow-lg"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <SafeIcon icon={FiAlertTriangle} className="w-6 h-6 text-blue-100" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-100">
+                Free Trial Active
+              </p>
+              <p className="text-xs text-blue-200 mt-1">
+                {typeof daysLeft === 'number' ? `${daysLeft} day(s) left in your free trial.` : 'Trial period information unavailable.'}
               </p>
             </div>
           </div>

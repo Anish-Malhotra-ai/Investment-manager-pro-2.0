@@ -7,6 +7,7 @@ import PropertyDetails from './components/PropertyDetails';
 import LoanManager from './components/LoanManager';
 import TransactionTable from './components/TransactionTable';
 import Settings from './components/Settings';
+import CheckoutResult from './components/CheckoutResult';
 import WelcomeSplash from './components/WelcomeSplash';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -153,6 +154,9 @@ function App() {
                       settings={data.settings || { financialYearStart: '07-01', notifications: [] }}
                       onSaveData={handleSaveDataWithNotificationCallback}
                     />
+                  } />
+                  <Route path="/checkout/result" element={
+                    <CheckoutResult user={user} />
                   } />
                   <Route path="/property/:id" element={
                     <PropertyDetails
