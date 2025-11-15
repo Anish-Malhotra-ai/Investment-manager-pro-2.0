@@ -7,6 +7,7 @@ import PropertyDetails from './components/PropertyDetails';
 import LoanManager from './components/LoanManager';
 import TransactionTable from './components/TransactionTable';
 import Settings from './components/Settings';
+import Payments from './components/Payments';
 import CheckoutResult from './components/CheckoutResult';
 import WelcomeSplash from './components/WelcomeSplash';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -187,6 +188,9 @@ function App() {
                       properties={data.properties}
                       onSaveData={handleSaveDataWithNotificationCallback}
                     />
+                  } />
+                  <Route path="/payments" element={
+                    <Payments user={user} />
                   } />
                   <Route path="/settings" element={
                     <Settings

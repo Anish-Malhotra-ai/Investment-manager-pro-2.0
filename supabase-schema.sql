@@ -112,6 +112,8 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free','monthly','yearly','lifetime')),
+    -- Tracks the last successful payment date for monthly/yearly plans
+    last_payment_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

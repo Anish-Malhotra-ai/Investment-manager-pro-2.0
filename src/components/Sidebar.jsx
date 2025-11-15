@@ -7,7 +7,7 @@ import { sanitizeNumberInput } from '../utils/number';
 
 const {
   FiHome, FiBarChart, FiCreditCard, FiSettings, FiChevronLeft, FiChevronRight,
-  FiTrendingUp, FiMapPin, FiList
+  FiTrendingUp, FiMapPin, FiList, FiDollarSign
 } = FiIcons;
 
 const Sidebar = ({
@@ -24,6 +24,7 @@ const Sidebar = ({
     { id: 'dashboard', label: 'Dashboard', icon: FiBarChart, path: '/' },
     { id: 'loans', label: 'Loans', icon: FiCreditCard, path: '/loans' },
     { id: 'transactions', label: 'Transactions', icon: FiList, path: '/transactions' },
+    { id: 'payments', label: 'Payments', icon: FiDollarSign, path: '/payments' },
     { id: 'settings', label: 'Settings', icon: FiSettings, path: '/settings' }
   ];
 

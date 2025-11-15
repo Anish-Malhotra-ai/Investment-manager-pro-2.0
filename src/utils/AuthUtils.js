@@ -30,6 +30,23 @@ export const isAccessRestricted = (user) => {
     const daysLeft = getTrialDaysLeft(user);
     return daysLeft === 0; // restricted after trial ends
   }
+  // For monthly/yearly, restrict if past due date + 7-day grace
+  if (plan === 'monthly' || plan === 'yearly') {
+    const lastPaymentStr = user?.profile?.last_payment_at;
+    if (!lastPaymentStr) return false; // if unknown, do not restrict
+    const lastPayment = new Date(lastPaymentStr);
+    if (isNaN(lastPayment.getTime())) return false;
+    const dueDate = new Date(lastPayment);
+    if (plan === 'monthly') {
+      dueDate.setMonth(dueDate.getMonth() + 1);
+    } else {
+      dueDate.setMonth(dueDate.getMonth() + 12);
+    }
+    const graceEnd = new Date(dueDate);
+    graceEnd.setDate(graceEnd.getDate() + 7);
+    const now = new Date();
+    return now > graceEnd;
+  }
   return false; // paid plans have full access
 };
 

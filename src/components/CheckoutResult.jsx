@@ -21,7 +21,12 @@ const CheckoutResult = ({ user }) => {
       if (status === 'success' && plan && user) {
         // Optionally verify session on backend here using sessionId
         setUpdating(true);
-        const result = await SupabaseManager.updateUserProfile(user.id, { plan });
+        // Record last payment date for monthly/yearly plans
+        const updatePayload = { plan };
+        if (plan === 'monthly' || plan === 'yearly') {
+          updatePayload.last_payment_at = new Date().toISOString();
+        }
+        const result = await SupabaseManager.updateUserProfile(user.id, updatePayload);
         setUpdating(false);
         if (result.success) {
           setMessage('Plan updated successfully. Redirecting to dashboard...');

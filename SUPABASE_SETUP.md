@@ -105,3 +105,23 @@ For production, use Stripe webhooks to update `user_profiles.plan` securely afte
 - Authentication is handled by Supabase Auth
 - Real-time updates are available through Supabase Realtime
 - Row Level Security ensures data privacy between users
+
+## Subscription Billing Fields
+
+- `user_profiles.plan`: One of `free`, `monthly`, `yearly`, `lifetime`.
+- `user_profiles.last_payment_at`: TIMESTAMPTZ storing the last successful payment date (monthly/yearly).
+
+### Frontend Behavior
+
+- Next due date is computed from `last_payment_at` based on plan frequency.
+- A banner appears if payment is due within 7 days: "Your payment is due in the next X days".
+- If the due date has passed, a grace banner appears: "Payment due date has passed and X days are left before termination".
+- After 7 days past due, the app automatically converts the user to `free` and access becomes restricted.
+
+### Migration
+
+If your project already has `user_profiles` deployed, add the column manually:
+
+```sql
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS last_payment_at TIMESTAMPTZ;
+```

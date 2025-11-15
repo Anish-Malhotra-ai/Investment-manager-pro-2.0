@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import DataManager from '../services/DataManager';
-import StripeManager from '../services/StripeManager';
 import { canUserPerformActions, getUserPlan, getTrialDaysLeft } from '../utils/AuthUtils';
 
 const { FiSave, FiDownload, FiUpload, FiTrash2, FiAlertTriangle, FiCheck, FiFolder, FiSettings } = FiIcons;
 
 const Settings = ({ user, settings, properties, loans, transactions, onSaveData }) => {
+  const navigate = useNavigate();
   // Check if user can perform actions (create/edit/delete)
   const canPerformActions = canUserPerformActions(user);
   const userPlan = getUserPlan(user);
@@ -233,35 +234,14 @@ const Settings = ({ user, settings, properties, loans, transactions, onSaveData 
             </div>
           )}
         </div>
-        {/* Purchase Plans */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[{ label: 'Monthly', key: 'monthly', productId: 'prod_TKxXRKi02WpYrV', desc: 'Pay monthly' },
-            { label: 'Annual', key: 'yearly', productId: 'prod_TKxbg6sZOnAH6V', desc: 'Best value annually' },
-            { label: 'Lifetime', key: 'lifetime', productId: 'prod_TKxd2zJsqX3Nzk', desc: 'One-time lifetime access' }].map(planOpt => (
-            <div key={planOpt.key} className="bg-gray-800/60 rounded-md p-3 border border-gray-700">
-              <div className="text-white font-medium">{planOpt.label}</div>
-              <div className="text-xs text-gray-400 mt-1">{planOpt.desc}</div>
-              <button
-                className="mt-3 px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 rounded-md text-white disabled:opacity-50"
-                disabled={!user}
-                onClick={async () => {
-                  if (!user) return alert('Please log in first');
-                  const result = await StripeManager.createCheckoutSession({
-                    plan: planOpt.key,
-                    productId: planOpt.productId,
-                    userId: user?.id || user?.user?.id,
-                  });
-                  if (result.success && result.url) {
-                    window.location.href = result.url;
-                  } else {
-                    alert(`Failed to start checkout: ${result.error || 'Unknown error'}`);
-                  }
-                }}
-              >
-                {userPlan === planOpt.key ? 'Current Plan' : `Choose ${planOpt.label}`}
-              </button>
-            </div>
-          ))}
+        {/* Manage Plans CTA */}
+        <div className="mt-4">
+          <button
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-md text-white"
+            onClick={() => navigate('/payments')}
+          >
+            Manage or Upgrade Plans
+          </button>
         </div>
       </div>
 
