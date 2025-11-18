@@ -27,7 +27,7 @@ const paymentPlans = [
     key: 'yearly',
     productId: 'prod_TKxbg6sZOnAH6V',
     desc: 'Best value with yearly billing.',
-    price: 29.99,
+    price: 29.90,
     priceSuffix: '/yr',
     mostPopular: true,
     points: [
